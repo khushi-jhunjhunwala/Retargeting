@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ADCP — Retargeting Campaign Flow</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  .topnav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 52px;
+    border-bottom: 1px solid #e8e8e8;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 100;
+  }
+  .brand { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: #0050c8; }
+  .brand span { color: #1a1a1a; font-weight: 400; }
+  .step-counter { font-size: 12px; color: #888; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    padding: 16px 32px 0;
+    background: #fff;
+    position: sticky;
+    top: 52px;
+    z-index: 99;
+  }
+  .progress-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 0;
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    cursor: pointer;
+  }
+  .progress-step:last-child { flex: none; }
+  .step-dot-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid #d0d0d0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #aaa;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  .step-dot.done { background: #0050c8; border-color: #0050c8; color: #fff; }
+  .step-dot.active { background: #fff; border-color: #0050c8; color: #0050c8; box-shadow: 0 0 0 3px rgba(0,80,200,0.12); }
+  .step-line {
+    flex: 1;
+    height: 1.5px;
+    background: #e0e0e0;
+    transition: background 0.3s ease;
+    margin: 0 2px;
+    margin-bottom: 20px;
+  }
+  .step-line.done { background: #0050c8; }
+  .step-dot-label {
+    font-size: 10px;
+    color: #aaa;
+    white-space: nowrap;
+    text-align: center;
+    max-width: 72px;
+    line-height: 1.3;
+    transition: color 0.2s;
+  }
+  .step-dot-label.active { color: #0050c8; font-weight: 500; }
+  .step-dot-label.done { color: #555; }
+  .progress-bar-line {
+    height: 2px;
+    background: #f0f0f0;
+    margin-top: 12px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: #0050c8;
+    border-radius: 2px;
+    transition: width 0.35s ease;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { flex: 1; padding: 32px 32px 40px; max-width: 780px; margin: 0 auto; width: 100%; }
+
+  /* ── SCREEN ── */
+  .screen { display: none; animation: fadeIn 0.22s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .screen-header { margin-bottom: 24px; }
+  .screen-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0050c8;
+    background: #eef2ff;
+    padding: 3px 9px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .screen-title { font-size: 20px; font-weight: 600; color: #111; margin-bottom: 4px; }
+  .screen-sub { font-size: 13px; color: #777; }
+
+  /* ── FORM ELEMENTS ── */
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .field-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .field-single { margin-bottom: 18px; }
+  .field-label { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .field-box {
+    height: 38px;
+    background: #f8f8f8;
+    border: 1px solid #e4e4e4;
+    border-radius: 8px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #1a1a1a;
+  }
+  .field-box.filled { background: #fff; border-color: #c0cfe8; color: #111; }
+  .field-box.placeholder { color: #bbb; font-style: italic; }
+
+  .upload-zone {
+    border: 1.5px dashed #d0d9ed;
+    border-radius: 8px;
+    padding: 14px 12px;
+    text-align: center;
+    background: #fafbff;
+  }
+  .upload-zone-label { font-size: 12px; color: #aaa; margin-bottom: 6px; }
+  .tag { display: inline-block; background: #eef2ff; color: #0050c8; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; margin: 2px; }
+  .tag.green { background: #edfaf3; color: #1a7a4a; }
+  .tag.amber { background: #fff8ec; color: #9a6500; }
+
+  /* ── STAT CARDS ── */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: #f8f8f8; border-radius: 10px; padding: 14px 16px; }
+  .stat-val { font-size: 22px; font-weight: 600; color: #111; }
+  .stat-lbl { font-size: 11px; color: #999; margin-top: 3px; }
+
+  /* ── TABLE ROWS ── */
+  .data-table { border: 1px solid #ebebeb; border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+  .data-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+  }
+  .data-row:last-child { border-bottom: none; }
+  .data-key { color: #666; }
+  .data-val { color: #111; font-weight: 500; }
+  .data-right { display: flex; align-items: center; gap: 10px; }
+
+  /* ── PROGRESS BARS ── */
+  .pbar-wrap { margin-bottom: 12px; }
+  .pbar-labels { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px; }
+  .pbar-track { height: 5px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+  .pbar-fill { height: 100%; border-radius: 3px; background: #0050c8; }
+
+  /* ── CHANNEL CARDS ── */
+  .channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .channel-card {
+    border: 1px solid #e4e4e4;
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #fff;
+  }
+  .channel-card.on { border-color: #0050c8; background: #f5f8ff; }
+  .channel-name { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .channel-card.on .channel-name { color: #0050c8; }
+  .channel-sub { font-size: 11px; color: #999; margin-bottom: 10px; }
+  .channel-card.on .channel-sub { color: #6a8fc8; }
+
+  /* ── BADGES ── */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; }
+  .badge-live { background: #edfaf3; color: #1a7a4a; }
+  .badge-warn { background: #fff8ec; color: #9a6500; }
+  .badge-muted { background: #f3f3f3; color: #888; }
+
+  /* ── TIMELINE ── */
+  .timeline { margin-bottom: 18px; }
+  .tl-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f5f5f5; }
+  .tl-row:last-child { border-bottom: none; }
+  .tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .tl-text { font-size: 12px; color: #444; flex: 1; }
+  .tl-time { font-size: 11px; color: #bbb; white-space: nowrap; }
+
+  /* ── MINI BAR CHART ── */
+  .mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin-bottom: 16px; padding: 0 2px; }
+  .bar { border-radius: 2px 2px 0 0; flex: 1; background: #d0dcf5; }
+  .bar.hi { background: #0050c8; }
+
+  /* ── EXPORT CARDS ── */
+  .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .export-card { border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 16px; }
+  .export-title { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 3px; }
+  .export-sub { font-size: 12px; color: #888; }
+
+  /* ── CYCLE NOTE ── */
+  .cycle-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #f5f8ff;
+    border: 1px solid #d0dcf0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 20px;
+  }
+  .cycle-note i { color: #0050c8; font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #bbb;
+    margin: 18px 0 10px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: #f0f0f0; margin: 18px 0; }
+
+  /* ── NAV BUTTONS ── */
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    color: #444;
+    transition: all 0.15s ease;
+    text-decoration: none;
+  }
+  .btn:hover { background: #f5f5f5; border-color: #ccc; }
+  .btn-primary {
+    background: #0050c8;
+    color: #fff;
+    border-color: #0050c8;
+  }
+  .btn-primary:hover { background: #0040a8; }
+  .btn-ghost { border-color: transparent; background: transparent; color: #aaa; }
+  .btn-ghost:hover { background: #f8f8f8; color: #555; border-color: #e8e8e8; }
+
+  .check-circle {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #0050c8;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .check-circle i { font-size: 10px; color: #fff; }
+
+  /* ── AI STATE ROW ── */
+  .ai-state-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ai-state-card { background: #f8f8f8; border-radius: 8px; padding: 10px 14px; }
+  .ai-state-lbl { font-size: 11px; color: #aaa; margin-bottom: 4px; }
+  .ai-state-val { font-size: 13px; font-weight: 500; }
+  .ai-state-val.green { color: #1a7a4a; }
+  .ai-state-val.amber { color: #9a6500; }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topnav">
+  <div class="brand">ADCP <span>· Retargeting Flow</span></div>
+  <div class="step-counter" id="stepCounter">Step 1 of 7</div>
+</div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-wrap">
+  <div class="progress-steps" id="progressSteps">
+    <!-- injected by JS -->
+  </div>
+  <div class="progress-bar-line">
+    <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STEP 1 -->
+  <div class="screen active" id="screen-0">
+    <div class="screen-header">
+      <div class="screen-tag">Step 1 · Audience</div>
+      <div class="screen-title">Define target group</div>
+      <div class="screen-sub">Upload MAIDs, pincodes, lat-longs, or choose a segment</div>
+    </div>
+    <div class="field-grid">
+      <div>
+        <div class="field-label">Campaign name</div>
+        <div class="field-box filled">Myntra_Summer26_Retargeting</div>
+      </div>
+      <div>
+        <div class="field-label">Objective</div>
+        <div class="field-box filled">Retargeting — web + DOOH</div>
+      </div>
+    </div>
+    <div class="section-label">Upload audience signals</div>
+    <div class="field-grid-3">
+      <div>
+        <div class="field-label">MAIDs</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">Drop .csv</div>
+          <div><span class="tag">+4,21,800 IDs</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Pincodes</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">Drop .csv</div>
+          <div><span class="tag">110001</span><span class="tag">400001</span><span class="tag">+18</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="field-label">Lat-long radius</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">Paste or draw on map</div>
+          <div><span class="tag">3 zones active</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div>
+        <div class="field-label">Audience segment</div>
+        <div class="field-box filled">Fashion intenders · M+F · 22–40</div>
+      </div>
+      <div>
+        <div class="field-label">Exclude segment</div>
+        <div class="field-box placeholder">Past converters (optional)</div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <div class="btn btn-ghost" style="visibility:hidden;">← Back</div>
+      <button class="btn btn-primary" onclick="goTo(1)">Preview reach <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen" id="screen-1">
+    <div class="screen-header">
+      <div class="screen-tag">Step 2 · Reach</div>
+      <div class="screen-title">View impression reach</div>
+      <div class="screen-sub">Estimated audience size and channel coverage across all active inventory</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-val">38.4L</div>
+        <div class="stat-lbl">Est. unique audience</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">4 channels</div>
+        <div class="stat-lbl">Coverage available</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">91%</div>
+        <div class="stat-lbl">MAID match rate</div>
+      </div>
+    </div>
+    <div class="section-label">Channel-level reach</div>
+    <div class="pbar-wrap">
+      <div class="pbar-labels"><span>Web</span><span>18.2L impr / mo</span></div>
+      <div class="pbar-track"><div class="pbar-fill" style="width:82%"></div></div>
+    </div>
+    <div class="pbar-wrap">
+      <div class="pbar-labels"><span>Mobile / App</span><span>12.6L impr / mo</span></div>
+      <div class="pbar-track"><div class="pbar-fill" style="width:60%"></div></div>
+    </div>
+    <div class="pbar-wrap">
+      <div class="pbar-labels"><span>DOOH</span><span>5.8L impr / mo</span></div>
+      <div class="pbar-track"><div class="pbar-fill" style="width:28%"></div></div>
+    </div>
+    <div class="pbar-wrap">
+      <div class="pbar-labels"><span>CTV</span><span>1.8L impr / mo</span></div>
+      <div class="pbar-track"><div class="pbar-fill" style="width:10%"></div></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(0)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Set budget <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen" id="screen-2">
+    <div class="screen-header">
+      <div class="screen-tag">Step 3 · Budget</div>
+      <div class="screen-title">Set budget + duration</div>
+      <div class="screen-sub">Total spend, impression target, and flight dates</div>
+    </div>
+    <div class="field-grid">
+      <div>
+        <div class="field-label">Total spend (₹)</div>
+        <div class="field-box filled">₹ 8,00,000</div>
+      </div>
+      <div>
+        <div class="field-label">Impression target</div>
+        <div class="field-box filled">38,00,000 impressions</div>
+      </div>
+    </div>
+    <div class="field-grid">
+      <div>
+        <div class="field-label">Flight start</div>
+        <div class="field-box filled">01 Jun 2026</div>
+      </div>
+      <div>
+        <div class="field-label">Flight end</div>
+        <div class="field-box filled">30 Jun 2026</div>
+      </div>
+    </div>
+    <div class="section-label">AI-suggested channel allocation</div>
+    <div class="data-table">
+      <div class="data-row"><span class="data-key">Web</span><span class="data-val">₹3,20,000 · 40%</span></div>
+      <div class="data-row"><span class="data-key">Mobile / App</span><span class="data-val">₹2,40,000 · 30%</span></div>
+      <div class="data-row"><span class="data-key">DOOH</span><span class="data-val">₹1,60,000 · 20%</span></div>
+      <div class="data-row"><span class="data-key">CTV</span><span class="data-val">₹80,000 · 10%</span></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn">Override allocation</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Add creatives <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="screen" id="screen-3">
+    <div class="screen-header">
+      <div class="screen-tag">Step 4 · Creatives</div>
+      <div class="screen-title">Upload creatives + select channels</div>
+      <div class="screen-sub">Format specs per channel — all four active for this campaign</div>
+    </div>
+    <div class="channel-grid">
+      <div class="channel-card on">
+        <div class="channel-name">
+          <div class="check-circle"><i class="ti ti-check"></i></div> Web
+        </div>
+        <div class="channel-sub">300×250 · 728×90 · 160×600</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">2 creatives uploaded</div>
+          <div><span class="tag green">Banner A.jpg</span><span class="tag green">Banner B.jpg</span></div>
+        </div>
+      </div>
+      <div class="channel-card on">
+        <div class="channel-name">
+          <div class="check-circle"><i class="ti ti-check"></i></div> Mobile / App
+        </div>
+        <div class="channel-sub">320×50 · 300×250 · interstitial</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">2 creatives uploaded</div>
+          <div><span class="tag green">App_300.jpg</span><span class="tag green">Interstitial.jpg</span></div>
+        </div>
+      </div>
+      <div class="channel-card on">
+        <div class="channel-name">
+          <div class="check-circle"><i class="ti ti-check"></i></div> DOOH
+        </div>
+        <div class="channel-sub">1920×1080 · 16:9 full-motion</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">1 creative uploaded</div>
+          <div><span class="tag green">OOH_Summer.mp4</span></div>
+        </div>
+      </div>
+      <div class="channel-card on">
+        <div class="channel-name">
+          <div class="check-circle"><i class="ti ti-check"></i></div> CTV
+        </div>
+        <div class="channel-sub">VAST 4.0 · 15s / 30s pre-roll</div>
+        <div class="upload-zone">
+          <div class="upload-zone-label">VAST URL pasted</div>
+          <div><span class="tag green">VAST URL ✓</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary" onclick="goTo(4)">Launch campaign <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="screen" id="screen-4">
+    <div class="screen-header">
+      <div class="screen-tag">Step 5 · Live</div>
+      <div class="screen-title">Campaign executes — live auction</div>
+      <div class="screen-sub">Myntra_Summer26_Retargeting · Day 14 of 30 · <span class="badge badge-live">● Live</span></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-val">14.2L</div>
+        <div class="stat-lbl">Impressions served</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">₹2,96,400</div>
+        <div class="stat-lbl">Spend to date</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">37%</div>
+        <div class="stat-lbl">Budget used (day 14)</div>
+      </div>
+    </div>
+    <div class="section-label">Channel delivery</div>
+    <div class="data-table">
+      <div class="data-row"><span class="data-key">Web</span><div class="data-right"><span class="badge badge-live">● Live</span><span class="data-val">5.8L impr.</span></div></div>
+      <div class="data-row"><span class="data-key">Mobile / App</span><div class="data-right"><span class="badge badge-live">● Live</span><span class="data-val">4.1L impr.</span></div></div>
+      <div class="data-row"><span class="data-key">DOOH</span><div class="data-right"><span class="badge badge-warn">Optimising</span><span class="data-val">3.2L impr.</span></div></div>
+      <div class="data-row"><span class="data-key">CTV</span><div class="data-right"><span class="badge badge-live">● Live</span><span class="data-val">1.1L impr.</span></div></div>
+    </div>
+    <div class="section-label">Auction activity — last 30 min</div>
+    <div class="mini-chart">
+      <div class="bar" style="height:30%"></div><div class="bar" style="height:55%"></div><div class="bar" style="height:45%"></div><div class="bar hi" style="height:80%"></div><div class="bar" style="height:60%"></div><div class="bar hi" style="height:90%"></div><div class="bar" style="height:70%"></div><div class="bar hi" style="height:85%"></div><div class="bar" style="height:65%"></div><div class="bar hi" style="height:95%"></div><div class="bar" style="height:72%"></div><div class="bar hi" style="height:88%"></div><div class="bar" style="height:50%"></div><div class="bar hi" style="height:92%"></div><div class="bar" style="height:68%"></div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(3)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary" onclick="goTo(5)">View AI agent <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="screen" id="screen-5">
+    <div class="screen-header">
+      <div class="screen-tag">Step 6 · Optimisation</div>
+      <div class="screen-title">AI agent optimises</div>
+      <div class="screen-sub">Autonomous — bids · pacing · budget shift · floor dropouts</div>
+    </div>
+    <div class="section-label">Recent agent actions</div>
+    <div class="timeline">
+      <div class="tl-row">
+        <div class="tl-dot" style="background:#0050c8"></div>
+        <div class="tl-text">DOOH floor spike detected — bid rerouted to Web inventory</div>
+        <div class="tl-time">2 min ago</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot" style="background:#1a7a4a"></div>
+        <div class="tl-text">Budget shift: +₹12,000 moved to Mobile (CTR 2.4× vs. target)</div>
+        <div class="tl-time">18 min ago</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot" style="background:#0050c8"></div>
+        <div class="tl-text">Bid raised on Web inventory · Mumbai 400050 high-density cluster</div>
+        <div class="tl-time">41 min ago</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot" style="background:#9a6500"></div>
+        <div class="tl-text">Creative B underperforming — Creative A now serving 100% share</div>
+        <div class="tl-time">1h 12m ago</div>
+      </div>
+      <div class="tl-row">
+        <div class="tl-dot" style="background:#1a7a4a"></div>
+        <div class="tl-text">Pacing on track — throttling not required</div>
+        <div class="tl-time">2h ago</div>
+      </div>
+    </div>
+    <div class="section-label">Current AI state</div>
+    <div class="ai-state-row">
+      <div class="ai-state-card">
+        <div class="ai-state-lbl">Pacing status</div>
+        <div class="ai-state-val green">On track</div>
+      </div>
+      <div class="ai-state-card">
+        <div class="ai-state-lbl">Floor dropout risk</div>
+        <div class="ai-state-val amber">DOOH — monitoring</div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(4)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary" onclick="goTo(6)">View report <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="screen" id="screen-6">
+    <div class="screen-header">
+      <div class="screen-tag">Step 7 · Report</div>
+      <div class="screen-title">Daily report + MAID export</div>
+      <div class="screen-sub">27 May 2026 · feeds into next campaign cycle</div>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-val">2.18L</div>
+        <div class="stat-lbl">Impressions today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">1.42L</div>
+        <div class="stat-lbl">Unique reach</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">₹44,800</div>
+        <div class="stat-lbl">Spend today</div>
+      </div>
+    </div>
+    <div class="data-table">
+      <div class="data-row"><span class="data-key">Effective CPM</span><span class="data-val">₹20.5</span></div>
+      <div class="data-row"><span class="data-key">CTR (web + app)</span><span class="data-val">1.82%</span></div>
+      <div class="data-row"><span class="data-key">DOOH proof-of-play</span><span class="data-val">98.4% confirmed</span></div>
+      <div class="data-row"><span class="data-key">CTV completion rate</span><span class="data-val">84%</span></div>
+    </div>
+    <div class="section-label">MAID export</div>
+    <div class="export-grid">
+      <div class="export-card">
+        <div class="export-title">Refreshed MAIDs</div>
+        <div class="export-sub">3,86,400 IDs · updated today</div>
+      </div>
+      <div class="export-card">
+        <div class="export-title">New audience signal</div>
+        <div class="export-sub">DOOH exposure segments · 12,200 new</div>
+      </div>
+    </div>
+    <div class="cycle-note">
+      <i class="ti ti-refresh"></i>
+      Refreshed MAIDs and DOOH exposure segments auto-populate into the next campaign cycle's audience definition.
+    </div>
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(5)"><i class="ti ti-arrow-left"></i> Back</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn"><i class="ti ti-download"></i> Download report</button>
+        <button class="btn btn-primary" onclick="goTo(0)"><i class="ti ti-refresh"></i> Start next cycle</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+  const STEPS = [
+    { label: 'Audience' },
+    { label: 'Reach' },
+    { label: 'Budget' },
+    { label: 'Creatives' },
+    { label: 'Live' },
+    { label: 'AI Agent' },
+    { label: 'Report' },
+  ];
+
+  let current = 0;
+
+  function buildProgress() {
+    const wrap = document.getElementById('progressSteps');
+    wrap.innerHTML = '';
+    STEPS.forEach((s, i) => {
+      const stepEl = document.createElement('div');
+      stepEl.className = 'progress-step';
+      stepEl.innerHTML = `
+        <div class="step-dot-wrap" onclick="goTo(${i})" style="cursor:pointer">
+          <div class="step-dot" id="dot-${i}">${i + 1}</div>
+          <div class="step-dot-label" id="dotlbl-${i}">${s.label}</div>
+        </div>
+      `;
+      wrap.appendChild(stepEl);
+      if (i < STEPS.length - 1) {
+        const line = document.createElement('div');
+        line.className = 'step-line';
+        line.id = `line-${i}`;
+        wrap.appendChild(line);
+      }
+    });
+  }
+
+  function updateProgress() {
+    STEPS.forEach((_, i) => {
+      const dot = document.getElementById(`dot-${i}`);
+      const lbl = document.getElementById(`dotlbl-${i}`);
+      dot.className = 'step-dot';
+      lbl.className = 'step-dot-label';
+      if (i < current) {
+        dot.classList.add('done');
+        dot.innerHTML = '<i class="ti ti-check" style="font-size:11px"></i>';
+        lbl.classList.add('done');
+      } else if (i === current) {
+        dot.classList.add('active');
+        dot.textContent = i + 1;
+        lbl.classList.add('active');
+      } else {
+        dot.textContent = i + 1;
+      }
+      if (i < STEPS.length - 1) {
+        const line = document.getElementById(`line-${i}`);
+        line.className = i < current ? 'step-line done' : 'step-line';
+      }
+    });
+    const pct = current === 0 ? 0 : Math.round((current / (STEPS.length - 1)) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('stepCounter').textContent = `Step ${current + 1} of ${STEPS.length}`;
+  }
+
+  function goTo(n) {
+    document.getElementById(`screen-${current}`).classList.remove('active');
+    current = n;
+    document.getElementById(`screen-${current}`).classList.add('active');
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  buildProgress();
+  updateProgress();
+</script>
+</body>
+</html>
