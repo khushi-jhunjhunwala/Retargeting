@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ADCP — Campaign Planner</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #fff;
+  color: #1a1a1a;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+}
+
+/* ── NAV ── */
+.topnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px; height: 52px;
+  border-bottom: 1px solid #e8e8e8;
+  position: sticky; top: 0; background: #fff; z-index: 200;
+}
+.brand { font-size: 13px; font-weight: 700; letter-spacing: 0.03em; color: #0050c8; }
+.brand span { color: #1a1a1a; font-weight: 400; }
+.step-counter { font-size: 12px; color: #888; }
+
+/* ── PROGRESS ── */
+.progress-wrap {
+  padding: 14px 32px 0; background: #fff;
+  position: sticky; top: 52px; z-index: 199;
+}
+.progress-steps { display: flex; align-items: flex-start; }
+.prog-dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1.5px solid #d0d0d0; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #bbb;
+  transition: all 0.2s; cursor: pointer; flex-shrink: 0;
+}
+.prog-dot.active { background: #fff; border-color: #0050c8; color: #0050c8; box-shadow: 0 0 0 3px rgba(0,80,200,0.12); }
+.prog-dot.done { background: #0050c8; border-color: #0050c8; color: #fff; }
+.prog-dot.prompt-dot { background: #0050c8; border-color: #0050c8; color: #fff; }
+.prog-line { flex: 1; height: 1.5px; margin: 0 3px; margin-top: 12px; background: #e0e0e0; transition: background 0.3s; }
+.prog-line.done { background: #0050c8; }
+.prog-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.prog-lbl { font-size: 9px; color: #bbb; white-space: nowrap; text-align: center; max-width: 64px; line-height: 1.3; }
+.prog-lbl.active { color: #0050c8; font-weight: 600; }
+.prog-lbl.done { color: #555; }
+.pbar-line { height: 2px; background: #f0f0f0; margin-top: 10px; border-radius: 2px; overflow: hidden; }
+.pbar-fill { height: 100%; background: #0050c8; border-radius: 2px; transition: width 0.35s ease; }
+
+/* ── MAIN ── */
+.main { flex: 1; padding: 28px 32px 48px; max-width: 800px; margin: 0 auto; width: 100%; }
+.screen { display: none; }
+.screen.active { display: block; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── SCREEN HEADER ── */
+.screen-tag {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #0050c8; background: #eef2ff;
+  padding: 3px 9px; border-radius: 4px; margin-bottom: 8px;
+}
+.screen-title { font-size: 20px; font-weight: 700; color: #111; margin-bottom: 4px; }
+.screen-sub { font-size: 13px; color: #777; margin-bottom: 24px; }
+
+/* ── FIELD WRAPPER ── */
+.field-wrap { margin-bottom: 16px; }
+.field-label-row { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.flabel { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #999; }
+
+/* ── FIELD BOX ── */
+.field-box {
+  height: 38px; background: #f8f8f8; border: 1px solid #e4e4e4;
+  border-radius: 8px; padding: 0 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px; color: #1a1a1a;
+}
+.field-box.filled { background: #fff; border-color: #c0cfe8; }
+.field-box.placeholder { color: #bbb; font-style: italic; }
+.editable-field {
+  height: 38px; border: 1px solid #c0cfe8; border-radius: 8px;
+  padding: 0 12px; font-size: 13px; width: 100%;
+  outline: none; background: #fff; font-family: inherit;
+  color: #1a1a1a; transition: border-color 0.15s;
+}
+.editable-field:focus { border-color: #0050c8; }
+
+/* ── SEGMENTED OPTIONS ── */
+.seg-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg-option {
+  height: 36px; padding: 0 16px;
+  display: inline-flex; align-items: center;
+  border: 1px solid #e4e4e4; border-radius: 8px;
+  background: #f8f8f8; font-size: 13px; color: #777;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.seg-option:hover { border-color: #c0cfe8; color: #444; }
+.seg-option.sel { background: #f5f8ff; border-color: #0050c8; color: #0050c8; font-weight: 600; }
+
+/* ── TOOLTIP ── */
+.tooltip-wrap { position: relative; display: inline-flex; }
+.tooltip-icon {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 1px solid #d8d8d8; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: help; color: #bbb; font-size: 10px; flex-shrink: 0;
+}
+.tooltip-icon:hover { border-color: #999; color: #666; }
+.tooltip-box {
+  display: none; position: absolute; bottom: calc(100% + 6px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a1a; color: #f5f5f5; font-size: 11px; line-height: 1.5;
+  padding: 8px 12px; border-radius: 6px; width: 220px; z-index: 999;
+  pointer-events: none; white-space: normal;
+}
+.tooltip-wrap:hover .tooltip-box { display: block; }
+
+/* ── AI SPARK — the only purple thing ── */
+.spark-btn {
+  width: 20px; height: 20px; border-radius: 5px;
+  background: #f3f0ff; border: 1px solid #c4b5fd;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #6d28d9; font-size: 11px; flex-shrink: 0;
+  transition: all 0.12s;
+}
+.spark-btn:hover { background: #ede9fe; border-color: #7c3aed; }
+
+/* ── AI SUGGESTION CARD — only purple element ── */
+.ai-suggestion {
+  background: #faf8ff; border: 1px solid #ddd6fe;
+  border-radius: 8px; padding: 10px 14px; margin-top: 6px;
+  display: none;
+}
+.ai-suggestion.visible { display: block; animation: fadeUp 0.15s ease; }
+.ai-sug-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #7c3aed; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+.ai-sug-text { font-size: 12px; color: #3b0764; line-height: 1.55; margin-bottom: 8px; }
+.ai-sug-actions { display: flex; gap: 7px; }
+.ai-sug-btn {
+  font-size: 11px; font-weight: 600; padding: 4px 12px;
+  border-radius: 5px; cursor: pointer; border: 1px solid;
+  transition: all 0.12s;
+}
+.ai-sug-accept { background: #5b21b6; color: #fff; border-color: #5b21b6; }
+.ai-sug-accept:hover { background: #4c1d95; }
+.ai-sug-dismiss { background: #fff; color: #888; border-color: #e0e0e0; }
+.ai-sug-dismiss:hover { background: #f5f5f5; }
+.ai-sug-regen { background: #fff; color: #6d28d9; border-color: #ddd6fe; }
+.ai-sug-regen:hover { background: #f3f0ff; }
+
+/* ── GRIDS ── */
+.fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fg3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #ccc; margin: 20px 0 10px; }
+
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 1.5px dashed #d0d9ed; border-radius: 8px;
+  padding: 14px 12px; text-align: center; background: #fafbff; margin-top: 4px;
+}
+.upload-zone-label { font-size: 12px; color: #aaa; margin-bottom: 6px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; margin: 2px; }
+.tag.blue { background: #eef2ff; color: #0050c8; }
+.tag.green { background: #ecfdf5; color: #065f46; }
+.tag.amber { background: #fffbeb; color: #92400e; }
+.tag.gray { background: #f3f4f6; color: #6b7280; }
+
+/* ── AI PROFILE CARD ── */
+.ai-profile-card {
+  background: #faf8ff; border: 1px solid #ddd6fe;
+  border-radius: 10px; padding: 14px 16px; margin-top: 6px;
+}
+.ai-profile-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ai-profile-icon { width: 26px; height: 26px; border-radius: 7px; background: #5b21b6; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; flex-shrink: 0; }
+.ai-profile-title { font-size: 12px; font-weight: 700; color: #3b0764; }
+.ai-profile-sub { font-size: 11px; color: #7c3aed; }
+.ai-profile-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.ai-profile-tag { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 4px; background: #ede9fe; color: #4c1d95; margin: 2px; }
+.ai-profile-note { font-size: 11px; color: #6d28d9; line-height: 1.5; }
+
+/* ── STAT CARDS ── */
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: #f8f8f8; border-radius: 10px; padding: 14px 16px; }
+.stat-val { font-size: 22px; font-weight: 700; color: #111; }
+.stat-lbl { font-size: 11px; color: #999; margin-top: 3px; }
+
+/* ── PROGRESS BARS ── */
+.pbar-wrap { margin-bottom: 14px; }
+.pbar-labels { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px; align-items: center; }
+.pbar-track { height: 5px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+.pbar-fill-bar { height: 100%; border-radius: 3px; background: #0050c8; }
+
+/* ── REACH: TARGET VS AVAILABLE ── */
+.reach-list { border: 1px solid #ebebeb; border-radius: 10px; padding: 4px 16px; margin-bottom: 14px; }
+.reach-row { padding: 14px 0; border-bottom: 1px solid #f3f3f3; }
+.reach-row:last-child { border-bottom: none; }
+.reach-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+.reach-ch { font-size: 13px; font-weight: 600; color: #111; }
+.reach-avail { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #999; }
+.reach-avail b { color: #555; font-weight: 600; }
+.reach-controls { display: grid; grid-template-columns: 156px 1fr 104px; align-items: center; gap: 14px; }
+.reach-input-wrap { position: relative; }
+.reach-input { width: 100%; height: 32px; border: 1px solid #c0cfe8; border-radius: 7px; padding: 0 42px 0 10px; font-size: 12px; background: #fff; outline: none; font-family: inherit; color: #1a1a1a; transition: border-color .15s; }
+.reach-input:focus { border-color: #0050c8; }
+.reach-input.over { border-color: #f3b4b4; background: #fef5f5; }
+.reach-input-suffix { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 11px; color: #aaa; pointer-events: none; }
+.reach-bar { height: 6px; background: #eef1f6; border-radius: 4px; overflow: hidden; }
+.reach-bar-fill { height: 100%; background: #0050c8; border-radius: 4px; transition: width .25s ease; }
+.reach-bar-fill.over { background: #dc2626; }
+.reach-status { font-size: 11px; color: #999; white-space: nowrap; text-align: right; }
+.reach-status.over { color: #dc2626; font-weight: 600; display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; }
+.reach-total { display: flex; align-items: center; justify-content: space-between; font-size: 12px; padding: 0 2px 4px; margin-bottom: 8px; }
+.reach-total-lbl { font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; }
+.reach-total-val { font-size: 13px; font-weight: 700; color: #111; }
+.reach-total-val span { font-weight: 400; color: #aaa; }
+
+/* ── BUDGET TABLE ── */
+.budget-table { border: 1px solid #e8e8e8; border-radius: 10px; overflow: visible; margin-bottom: 18px; }
+.budget-row { display: grid; grid-template-columns: 110px 1fr 72px 72px 32px 24px; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+.budget-row:last-child { border-bottom: none; }
+.budget-row.hdr { background: #f8f8f8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #bbb; border-radius: 10px 10px 0 0; }
+.budget-input {
+  height: 30px; border: 1px solid #e0e0e0; border-radius: 6px;
+  padding: 0 8px; font-size: 12px; width: 100%;
+  background: #fff; color: #1a1a1a;
+  outline: none; transition: all 0.15s;
+}
+.budget-input:focus { border-color: #0050c8; background: #f5f8ff; }
+.lock-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  border: 1px solid #e0e0e0; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #bbb; font-size: 13px; transition: all 0.15s;
+}
+.lock-btn.locked { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
+.rebalance-note { font-size: 11px; color: #666; background: #f8f8f8; border: 1px solid #e8e8e8; border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+/* ── DATA TABLE ── */
+.data-table { border: 1px solid #ebebeb; border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+.data-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+.data-row:last-child { border-bottom: none; }
+.data-key { color: #666; }
+.data-val { color: #111; font-weight: 600; }
+.data-right { display: flex; align-items: center; gap: 8px; }
+
+/* ── CHANNEL CARDS ── */
+.channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.channel-card { border: 1px solid #e4e4e4; border-radius: 10px; padding: 14px 16px; background: #fff; }
+.channel-card.on { border-color: #0050c8; background: #f5f8ff; }
+.channel-name { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+.channel-card.on .channel-name { color: #0050c8; }
+.channel-sub { font-size: 11px; color: #999; margin-bottom: 10px; }
+.channel-card.on .channel-sub { color: #6a8fc8; }
+.check-dot { width: 15px; height: 15px; border-radius: 50%; background: #0050c8; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.check-dot i { font-size: 9px; color: #fff; }
+
+/* ── PUBLISHER TARGETING ── */
+.pub-target { background: #f9fafb; border: 1px solid #e8e8e8; border-radius: 8px; padding: 10px 12px; margin-top: 8px; }
+.pub-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
+.pub-toggle-btn { height: 24px; padding: 0 10px; border-radius: 5px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid #e0e0e0; background: #fff; color: #888; transition: all 0.12s; }
+.pub-toggle-btn.active-inc { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+.pub-toggle-btn.active-exc { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+.pub-target-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.pub-input { flex: 1; height: 28px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 0 8px; font-size: 12px; outline: none; background: #fff; transition: border-color 0.15s; }
+.pub-input:focus { border-color: #0050c8; }
+.pub-add-btn { height: 28px; padding: 0 10px; border-radius: 6px; background: #0050c8; color: #fff; border: none; font-size: 11px; font-weight: 600; cursor: pointer; }
+.pub-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.pub-tag-item { display: inline-flex; align-items: center; gap: 4px; background: #ecfdf5; color: #065f46; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 500; }
+.pub-tag-item.excl { background: #fef2f2; color: #991b1b; }
+.pub-tag-x { cursor: pointer; opacity: 0.6; font-size: 10px; }
+.pub-tag-x:hover { opacity: 1; }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; }
+.badge-live { background: #ecfdf5; color: #065f46; }
+.badge-warn { background: #fffbeb; color: #92400e; }
+
+/* ── TIMELINE ── */
+.timeline { margin-bottom: 18px; }
+.tl-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f5f5f5; }
+.tl-row:last-child { border-bottom: none; }
+.tl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.tl-body { flex: 1; }
+.tl-text { font-size: 12px; color: #444; line-height: 1.4; }
+.tl-why { font-size: 11px; color: #6d28d9; margin-top: 3px; cursor: pointer; display: inline-flex; align-items: center; gap: 3px; }
+.tl-why:hover { text-decoration: underline; }
+.tl-time { font-size: 11px; color: #bbb; white-space: nowrap; }
+
+/* ── MINI CHART ── */
+.mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 44px; margin-bottom: 16px; }
+.bar { border-radius: 2px 2px 0 0; flex: 1; background: #dbeafe; }
+.bar.hi { background: #0050c8; }
+
+/* ── AI STATE ── */
+.ai-state-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+.ai-state-card { background: #f8f8f8; border-radius: 8px; padding: 10px 14px; }
+.ai-state-lbl { font-size: 11px; color: #aaa; margin-bottom: 4px; }
+.ai-state-val { font-size: 13px; font-weight: 600; }
+.ai-state-val.green { color: #065f46; }
+.ai-state-val.amber { color: #92400e; }
+
+/* ── EXPORT ── */
+.export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.export-card { border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 16px; }
+.export-title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 3px; }
+.export-sub { font-size: 12px; color: #888; }
+.cycle-note { display: flex; align-items: flex-start; gap: 10px; background: #f5f8ff; border: 1px solid #d0dcf0; border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #444; margin-bottom: 20px; }
+
+/* ── BUTTONS ── */
+.nav-row { display: flex; align-items: center; justify-content: space-between; margin-top: 28px; padding-top: 20px; border-top: 1px solid #f0f0f0; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #e0e0e0; background: #fff; color: #444; transition: all 0.15s; }
+.btn:hover { background: #f5f5f5; }
+.btn-primary { background: #0050c8; color: #fff; border-color: #0050c8; }
+.btn-primary:hover { background: #0040a8; }
+.btn-ghost { border-color: transparent; background: transparent; color: #aaa; }
+.btn-ghost:hover { background: #f8f8f8; color: #555; border-color: #e8e8e8; }
+
+/* ── PROMPT SCREEN ── */
+.prompt-screen { min-height: 62vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 0; }
+.prompt-logo { font-size: 28px; font-weight: 800; color: #0050c8; margin-bottom: 6px; letter-spacing: -0.02em; }
+.prompt-headline { font-size: 14px; color: #888; margin-bottom: 32px; }
+.prompt-box-wrap { width: 100%; max-width: 600px; position: relative; }
+.prompt-box {
+  width: 100%; min-height: 76px; padding: 14px 52px 14px 16px;
+  border: 1.5px solid #c0cfe8; border-radius: 12px;
+  font-size: 14px; color: #1a1a1a; line-height: 1.6;
+  outline: none; resize: none; background: #f5f8ff;
+  font-family: inherit; transition: border-color 0.2s;
+}
+.prompt-box:focus { border-color: #0050c8; background: #fff; }
+.prompt-box::placeholder { color: #aab8d4; }
+.prompt-submit {
+  position: absolute; bottom: 12px; right: 12px;
+  width: 34px; height: 34px; border-radius: 9px;
+  background: #0050c8; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 15px; transition: background 0.15s;
+}
+.prompt-submit:hover { background: #0040a8; }
+.prompt-hints { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin-top: 12px; }
+.prompt-hint {
+  font-size: 11px; color: #0050c8; background: #eef2ff;
+  border: 1px solid #c0cfe8; border-radius: 20px; padding: 4px 12px;
+  cursor: pointer; transition: all 0.12s;
+}
+.prompt-hint:hover { background: #dce8ff; }
+
+/* ── GENERATING ── */
+.generating { display: none; align-items: center; gap: 10px; background: #f5f8ff; border: 1px solid #c0cfe8; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+.generating.visible { display: flex; }
+.gen-spinner { width: 16px; height: 16px; border: 2px solid #c0cfe8; border-top-color: #0050c8; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.gen-text { font-size: 12px; color: #0050c8; }
+
+/* floating suggestion */
+#floater { position: fixed; bottom: 24px; right: 24px; max-width: 320px; z-index: 500; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="topnav">
+  <div class="brand">ADCP <span>· Campaign Planner</span></div>
+  <div class="step-counter" id="stepCounter">Start</div>
+</div>
+
+<!-- PROGRESS (hidden on prompt screen) -->
+<div class="progress-wrap" id="progressWrap" style="display:none">
+  <div class="progress-steps" id="progressSteps"></div>
+  <div class="pbar-line"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+</div>
+
+<div class="main">
+
+<!-- ── STEP 0: PROMPT ── -->
+<div class="screen active" id="screen-0">
+  <div class="prompt-screen">
+    <div class="prompt-logo">ADCP.</div>
+    <div class="prompt-headline">Describe your campaign. AI builds the plan.</div>
+    <div class="prompt-box-wrap">
+      <textarea class="prompt-box" id="promptInput" placeholder="e.g. Retargeting for Hiveclothing — users who saw our summer collection, ₹8L budget, 30 days, heavier on CTV and DOOH, Mumbai and Delhi only…" rows="3"></textarea>
+      <button class="prompt-submit" onclick="submitPrompt()"><i class="ti ti-arrow-up"></i></button>
+    </div>
+    <div class="prompt-hints">
+      <div class="prompt-hint" onclick="fillHint(0)">Retargeting past campaign</div>
+      <div class="prompt-hint" onclick="fillHint(1)">Brand awareness — all channels</div>
+      <div class="prompt-hint" onclick="fillHint(2)">CTV + DOOH, metro cities</div>
+      <div class="prompt-hint" onclick="fillHint(3)">Performance, mobile-first</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STEP 1: AUDIENCE ── -->
+<div class="screen" id="screen-1">
+  <div class="screen-tag">Step 1 · Audience</div>
+  <div class="screen-title">Define target group</div>
+  <div class="screen-sub">Review your audience setup — all fields are editable</div>
+
+  <div class="generating" id="gen1"><div class="gen-spinner"></div><div class="gen-text">AI is building your audience profile from the prompt…</div></div>
+
+  <div class="fg2">
+    <div class="field-wrap">
+      <div class="field-label-row">
+        <span class="flabel">Campaign name</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">A unique name for this campaign. Used in reports and MAID exports. AI suggests one based on your brand and flight dates.</div></div>
+        <div class="spark-btn" onclick="spark('campname','Hiveclothing_SS26_Retargeting_Jun2026 — includes brand, collection, objective and month for easy filtering in reports')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <input class="editable-field" value="Hiveclothing_SS26_Retargeting_Jun26" />
+      <div class="ai-suggestion" id="sug-campname"></div>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label-row">
+        <span class="flabel">KPI</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">The primary success metric AI optimises toward. CPA targets a fixed cost per action; ROAS targets a revenue-to-spend ratio. Drives bidding strategy and budget pacing.</div></div>
+        <div class="spark-btn" onclick="spark('kpi','With Conversions as the objective, ROAS is the cleaner success metric for a fashion retailer with variable basket sizes — it protects margin better than a flat CPA target. Use CPA only if you have a fixed cost-per-acquisition ceiling.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="seg-group">
+        <div class="seg-option sel" onclick="selectSeg(this)">CPA</div>
+        <div class="seg-option" onclick="selectSeg(this)">ROAS</div>
+      </div>
+      <div class="ai-suggestion" id="sug-kpi"></div>
+    </div>
+  </div>
+
+  <div class="field-wrap">
+    <div class="field-label-row">
+      <span class="flabel">Objective</span>
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">What this campaign is trying to do. Drives how AI allocates budget across channels and sets bidding strategy.</div></div>
+      <div class="spark-btn" onclick="spark('objective','For a warm retargeting audience already exposed to Hiveclothing, Conversions is the strongest objective — they sit lower-funnel and are closest to purchase. AI will weight bids toward conversion-likely users and tune CTV/DOOH for closing rather than raw reach.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="seg-group">
+      <div class="seg-option" onclick="selectSeg(this)">Awareness</div>
+      <div class="seg-option" onclick="selectSeg(this)">Traffic</div>
+      <div class="seg-option" onclick="selectSeg(this)">Engagement</div>
+      <div class="seg-option sel" onclick="selectSeg(this)">Conversions</div>
+    </div>
+    <div class="ai-suggestion" id="sug-objective"></div>
+  </div>
+
+  <div class="section-label">Audience source</div>
+  <div class="field-wrap" style="margin-bottom:14px">
+    <div class="field-label-row">
+      <span class="flabel">Import from past campaign</span>
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Pull the MAID list exported from a previous ADCP campaign. These are users already exposed to your brand — the highest-quality retargeting seed available.</div></div>
+      <div class="spark-btn" onclick="spark('pascamp','Hiveclothing_SS26_Discovery_Apr26 is your most recent campaign with 4.21L exported MAIDs and 91% match rate — best seed for this retargeting flight.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="field-box filled"><span>Hiveclothing_SS26_Discovery_Apr26</span><span class="tag blue">4.21L MAIDs</span></div>
+    <div class="ai-suggestion" id="sug-pascamp"></div>
+  </div>
+
+  <div class="fg3" style="margin-bottom:16px">
+    <div>
+      <div class="field-label-row">
+        <span class="flabel">MAIDs upload</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Mobile Advertising IDs — unique device identifiers. Upload a .csv to target specific users across all channels. Imported automatically from past campaign above.</div></div>
+      </div>
+      <div class="upload-zone">
+        <div class="upload-zone-label">Auto-imported from past campaign</div>
+        <div><span class="tag blue">4,21,800 IDs loaded</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="field-label-row">
+        <span class="flabel">Pincodes</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Target users in specific postal zones. Drives DOOH screen selection and geo-filtered mobile delivery.</div></div>
+        <div class="spark-btn" onclick="spark('pincodes','Based on your Mumbai + Delhi brief: 110001, 110011, 110016 (Delhi South) and 400001, 400050, 400053 (Mumbai South + Bandra) — high-income fashion zones.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="upload-zone">
+        <div class="upload-zone-label">Drop .csv</div>
+        <div><span class="tag blue">110001</span><span class="tag blue">400001</span><span class="tag blue">+18</span></div>
+      </div>
+      <div class="ai-suggestion" id="sug-pincodes"></div>
+    </div>
+    <div>
+      <div class="field-label-row">
+        <span class="flabel">Lat-long zones</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Precise geographic zones for DOOH screen selection and proximity-based mobile targeting. Draw on map or paste coordinates.</div></div>
+        <div class="spark-btn" onclick="spark('latlng','3 zones suggested based on your pincodes: Bandra-Kurla Complex, Connaught Place, and South Mumbai — all premium footfall areas for your audience profile.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="upload-zone">
+        <div class="upload-zone-label">Paste or draw on map</div>
+        <div><span class="tag blue">3 zones active</span></div>
+      </div>
+      <div class="ai-suggestion" id="sug-latlng"></div>
+    </div>
+  </div>
+
+  <div class="field-wrap">
+    <div class="field-label-row">
+      <span class="flabel">AI-inferred audience profile</span>
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">AI analyses your MAID list and past campaign data to infer demographic and behavioural attributes. Review and edit any attribute before proceeding.</div></div>
+      <div class="spark-btn" onclick="spark('segment','Refined profile: Female-skew 62% · Age 22–36 · Mumbai + Delhi · Fashion + lifestyle app users · Mid-to-premium income · High mobile usage 9pm–11pm. Recommend targeting this time window specifically for CTV.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-profile-card">
+      <div class="ai-profile-header">
+        <div class="ai-profile-icon"><i class="ti ti-sparkles" style="font-size:13px"></i></div>
+        <div><div class="ai-profile-title">Inferred from MAID upload + Hiveclothing_SS26_Discovery_Apr26</div><div class="ai-profile-sub">91% match rate · High confidence</div></div>
+      </div>
+      <div class="ai-profile-tags">
+        <span class="ai-profile-tag">Fashion intenders</span>
+        <span class="ai-profile-tag">Female-skew · 60%</span>
+        <span class="ai-profile-tag">Age 22–38</span>
+        <span class="ai-profile-tag">Mumbai + Delhi</span>
+        <span class="ai-profile-tag">Mobile-first</span>
+        <span class="ai-profile-tag">Mid-premium income</span>
+      </div>
+      <div class="ai-profile-note">Strong overlap in fashion and lifestyle app inventory. DOOH exposure concentrated in premium mall and metro station clusters.</div>
+    </div>
+    <div class="ai-suggestion" id="sug-segment"></div>
+  </div>
+
+  <div class="field-wrap">
+    <div class="field-label-row">
+      <span class="flabel">Exclude segment</span>
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Users to suppress from this campaign. Common exclusions: recent converters, loyalty members, users with 5+ prior exposures.</div></div>
+      <div class="spark-btn" onclick="spark('exclude','Recommend excluding: users who purchased in last 30 days (saves budget on already-converted), and users with 5+ exposures in the April campaign (fatigue risk).')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="field-box placeholder"><span>Optional — click ✦ for AI suggestion</span></div>
+    <div class="ai-suggestion" id="sug-exclude"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn btn-ghost" onclick="goTo(0)">← Back to prompt</button>
+    <button class="btn btn-primary" onclick="goTo(2)">Preview reach <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ── STEP 2: REACH ── -->
+<div class="screen" id="screen-2">
+  <div class="screen-tag">Step 2 · Reach</div>
+  <div class="screen-title">View impression reach</div>
+  <div class="screen-sub">Set the impressions you want per channel against what's available — AI flags anything over the ceiling</div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-val">38.4L</div><div class="stat-lbl">Est. unique audience</div></div>
+    <div class="stat-card"><div class="stat-val">4 channels</div><div class="stat-lbl">Coverage available</div></div>
+    <div class="stat-card">
+      <div class="stat-val">91%</div>
+      <div class="stat-lbl" style="display:flex;align-items:center;gap:4px">MAID match rate
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Percentage of uploaded MAIDs found in ADCP's live inventory. 91% means 91% of your list is reachable. Below 70% signals a stale list.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="section-label">Channel reach — target vs available</div>
+  <div class="reach-list">
+    <div class="reach-row">
+      <div class="reach-head">
+        <span class="reach-ch">Web</span>
+        <div class="reach-avail"><span><b>18.2L</b> / mo available</span><div class="spark-btn" onclick="spark('rch-web','Web ceiling is 18.2L/mo. For your CTV+DOOH brief, target ~9L on Web (≈50%) — a broad-reach safety net without over-spending on cheap inventory. Pushing past ~14L starts buying low-quality impressions.')"><i class="ti ti-sparkles"></i></div></div>
+      </div>
+      <div class="reach-controls">
+        <div class="reach-input-wrap"><input class="reach-input" id="rt-web" value="9,00,000" oninput="updateReach('web',false)" onchange="updateReach('web',true)" /><span class="reach-input-suffix">impr</span></div>
+        <div class="reach-bar"><div class="reach-bar-fill" id="rf-web" style="width:49%"></div></div>
+        <div class="reach-status" id="rs-web">49% of available</div>
+      </div>
+      <div class="ai-suggestion" id="sug-rch-web"></div>
+    </div>
+    <div class="reach-row">
+      <div class="reach-head">
+        <span class="reach-ch">Mobile / App</span>
+        <div class="reach-avail"><span><b>12.6L</b> / mo available</span><div class="spark-btn" onclick="spark('rch-mob','Mobile ceiling is 12.6L/mo with your highest MAID match rate. Target ~8L (≈63%) — strong retargeting efficiency at the lowest CPM in your mix. Good channel to absorb spend shifted off Web.')"><i class="ti ti-sparkles"></i></div></div>
+      </div>
+      <div class="reach-controls">
+        <div class="reach-input-wrap"><input class="reach-input" id="rt-mobile" value="8,00,000" oninput="updateReach('mobile',false)" onchange="updateReach('mobile',true)" /><span class="reach-input-suffix">impr</span></div>
+        <div class="reach-bar"><div class="reach-bar-fill" id="rf-mobile" style="width:63%"></div></div>
+        <div class="reach-status" id="rs-mobile">63% of available</div>
+      </div>
+      <div class="ai-suggestion" id="sug-rch-mob"></div>
+    </div>
+    <div class="reach-row">
+      <div class="reach-head">
+        <span class="reach-ch">DOOH</span>
+        <div class="reach-avail"><span><b>5.8L</b> / mo available</span><div class="spark-btn" onclick="spark('rch-dooh','DOOH ceiling is 5.8L/mo across 1.4L screens in your pincodes. Your brief is DOOH-heavy — target ~5L (≈86%) to claim premium mall + metro inventory before competitors. Going to the ceiling risks unsold-slot fallback.')"><i class="ti ti-sparkles"></i></div></div>
+      </div>
+      <div class="reach-controls">
+        <div class="reach-input-wrap"><input class="reach-input" id="rt-dooh" value="5,00,000" oninput="updateReach('dooh',false)" onchange="updateReach('dooh',true)" /><span class="reach-input-suffix">impr</span></div>
+        <div class="reach-bar"><div class="reach-bar-fill" id="rf-dooh" style="width:86%"></div></div>
+        <div class="reach-status" id="rs-dooh">86% of available</div>
+      </div>
+      <div class="ai-suggestion" id="sug-rch-dooh"></div>
+    </div>
+    <div class="reach-row">
+      <div class="reach-head">
+        <span class="reach-ch">CTV</span>
+        <div class="reach-avail"><span><b>1.8L</b> / mo available</span><div class="spark-btn" onclick="spark('rch-ctv','CTV ceiling is only 1.8L/mo but it over-indexes on JioCinema + Hotstar drama for your audience. Target ~1.6L (≈89%) to capture nearly all high-quality inventory — there is little headroom, so don''t over-target here.')"><i class="ti ti-sparkles"></i></div></div>
+      </div>
+      <div class="reach-controls">
+        <div class="reach-input-wrap"><input class="reach-input" id="rt-ctv" value="1,60,000" oninput="updateReach('ctv',false)" onchange="updateReach('ctv',true)" /><span class="reach-input-suffix">impr</span></div>
+        <div class="reach-bar"><div class="reach-bar-fill" id="rf-ctv" style="width:89%"></div></div>
+        <div class="reach-status" id="rs-ctv">89% of available</div>
+      </div>
+      <div class="ai-suggestion" id="sug-rch-ctv"></div>
+    </div>
+  </div>
+  <div class="reach-total">
+    <span class="reach-total-lbl">Total target</span>
+    <span class="reach-total-val" id="reach-total-val">23.6L <span>of 38.4L available</span></span>
+  </div>
+  <div class="nav-row">
+    <button class="btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Set budget <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ── STEP 3: BUDGET ── -->
+<div class="screen" id="screen-3">
+  <div class="screen-tag">Step 3 · Budget</div>
+  <div class="screen-title">Set budget + duration</div>
+  <div class="screen-sub">Edit any channel directly — lock values you want protected, rest auto-rebalances</div>
+
+  <div class="fg2" style="margin-bottom:16px">
+    <div class="field-wrap">
+      <div class="field-label-row">
+        <span class="flabel">Total spend (₹)</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Total campaign budget. AI distributes this across channels based on your objective. Override per channel in the table below.</div></div>
+        <div class="spark-btn" onclick="spark('totbud','For a 30-day retargeting campaign at this audience size, ₹8–10L is optimal. Below ₹5L, frequency drops too low to drive brand recall.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <input class="editable-field" value="₹8,00,000" />
+      <div class="ai-suggestion" id="sug-totbud"></div>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label-row">
+        <span class="flabel">Impression target</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Total impressions to deliver. Derived from budget and average CPM across your channels. Set your own target and AI adjusts CPM expectations accordingly.</div></div>
+        <div class="spark-btn" onclick="spark('imptgt','At a blended CPM of ₹21 across your channel mix, ₹8L should deliver ~38L impressions. DOOH significantly lowers your blended average.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <input class="editable-field" value="38,00,000 impressions" />
+      <div class="ai-suggestion" id="sug-imptgt"></div>
+    </div>
+  </div>
+  <div class="fg2" style="margin-bottom:20px">
+    <div class="field-wrap">
+      <div class="field-label-row"><span class="flabel">Flight start</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Campaign goes live on this date. AI pre-fills based on today + 3 days for setup and creative trafficking.</div></div>
+      </div>
+      <input class="editable-field" value="01 Jun 2026" />
+    </div>
+    <div class="field-wrap">
+      <div class="field-label-row"><span class="flabel">Flight end</span>
+        <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Campaign end date. AI suggests 30 days for retargeting — enough for 4–6 exposures per user without fatigue.</div></div>
+        <div class="spark-btn" onclick="spark('dates','30 days is optimal for a retargeting flight at this budget — gives 4–6 exposures per user across channels before diminishing returns set in.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <input class="editable-field" value="30 Jun 2026" />
+      <div class="ai-suggestion" id="sug-dates"></div>
+    </div>
+  </div>
+
+  <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span>Channel budget allocation</span>
+    <div class="spark-btn" onclick="spark('alloc','Recommended for CTV+DOOH brief: CTV 30% (₹2.4L) · DOOH 30% (₹2.4L) · Mobile 25% (₹2L) · Web 15% (₹1.2L). Weighted toward your brief with mobile retargeting supporting MAID match.')"><i class="ti ti-sparkles"></i></div>
+  </div>
+  <div class="ai-suggestion" id="sug-alloc" style="margin-bottom:12px"></div>
+  <div class="rebalance-note">
+    <i class="ti ti-info-circle" style="font-size:14px;color:#0050c8;flex-shrink:0"></i>
+    Edit any channel — unlocked channels auto-rebalance proportionally. Lock a row to protect its value.
+  </div>
+  <div class="budget-table">
+    <div class="budget-row hdr"><span>Channel</span><span>Budget (₹)</span><span>% total</span><span>Target CPM</span><span>Lock</span><span></span></div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">Web</span>
+      <input class="budget-input" id="b-web" value="1,20,000" />
+      <input class="budget-input" id="p-web" value="15%" />
+      <input class="budget-input" value="₹18" />
+      <div class="lock-btn" id="lock-web" onclick="toggleLock('web')"><i class="ti ti-lock-open"></i></div>
+      <div class="spark-btn" onclick="spark('bweb','Web at 15% is appropriate given your CTV+DOOH focus. Broad reach safety net without cannibalising premium channels.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">Mobile / App</span>
+      <input class="budget-input" id="b-mobile" value="2,00,000" />
+      <input class="budget-input" id="p-mobile" value="25%" />
+      <input class="budget-input" value="₹16" />
+      <div class="lock-btn" id="lock-mobile" onclick="toggleLock('mobile')"><i class="ti ti-lock-open"></i></div>
+      <div class="spark-btn" onclick="spark('bmobile','Mobile at 25% is optimal — your audience is mobile-first and MAID match rate is highest here. Lowest CPM across channels.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">DOOH</span>
+      <input class="budget-input" id="b-dooh" value="2,40,000" />
+      <input class="budget-input" id="p-dooh" value="30%" />
+      <input class="budget-input" value="₹22" />
+      <div class="lock-btn" id="lock-dooh" onclick="toggleLock('dooh')"><i class="ti ti-lock-open"></i></div>
+      <div class="spark-btn" onclick="spark('bdooh','DOOH at 30% aligns with your brief. Mumbai + Delhi premium mall and metro screens have strongest audience overlap. Proof-of-play reporting included.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">CTV</span>
+      <input class="budget-input" id="b-ctv" value="2,40,000" />
+      <input class="budget-input" id="p-ctv" value="30%" />
+      <input class="budget-input" value="₹28" />
+      <div class="lock-btn" id="lock-ctv" onclick="toggleLock('ctv')"><i class="ti ti-lock-open"></i></div>
+      <div class="spark-btn" onclick="spark('bctv','CTV at 30% delivers high-impact pre-roll to your retargeting audience on JioCinema and Hotstar. Highest CPM but strongest brand recall signal in your channel mix.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Add creatives <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ── STEP 4: CREATIVES ── -->
+<div class="screen" id="screen-4">
+  <div class="screen-tag">Step 4 · Creatives</div>
+  <div class="screen-title">Upload creatives + publisher targeting</div>
+  <div class="screen-sub">Upload formats and set publisher include/exclude rules per channel</div>
+
+  <div class="channel-grid">
+    <div class="channel-card on">
+      <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>Web<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cweb','For fashion intenders: include Mint, ET Style, Vogue India, Femina. Exclude TOI run-of-site — too broad. Target finance + lifestyle sections for context relevance.')"><i class="ti ti-sparkles"></i></div></div>
+      <div class="channel-sub">300×250 · 728×90 · 160×600</div>
+      <div class="upload-zone" style="margin-bottom:8px">
+        <div class="upload-zone-label">2 creatives uploaded</div>
+        <div><span class="tag green">Banner_A.jpg</span><span class="tag green">Banner_B.jpg</span></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">Publisher targeting</div>
+      <div class="pub-target">
+        <div class="pub-toggle">
+          <button class="pub-toggle-btn active-inc" id="pt-web-inc" onclick="setPubMode('web','inc')">Allowlist</button>
+          <button class="pub-toggle-btn" id="pt-web-exc" onclick="setPubMode('web','exc')">Blocklist</button>
+        </div>
+        <div class="pub-target-row">
+          <input class="pub-input" id="pi-web" placeholder="mint.com, vogue.in…" />
+          <button class="pub-add-btn" onclick="addPub('web')">+ Add</button>
+        </div>
+        <div class="pub-tags" id="pt-web">
+          <div class="pub-tag-item">mint.com<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item">vogue.in<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item">femina.in<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="channel-card on">
+      <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>Mobile / App<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cmob','For fashion intenders: include Myntra, Nykaa, Ajio apps. Exclude gaming apps — wrong context. In-app targeting: users who recently browsed fashion/apparel category.')"><i class="ti ti-sparkles"></i></div></div>
+      <div class="channel-sub">320×50 · 300×250 · interstitial</div>
+      <div class="upload-zone" style="margin-bottom:8px">
+        <div class="upload-zone-label">2 creatives uploaded</div>
+        <div><span class="tag green">App_300.jpg</span><span class="tag green">Interstitial.jpg</span></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">App targeting</div>
+      <div class="pub-target">
+        <div class="pub-toggle">
+          <button class="pub-toggle-btn active-inc" id="pt-mob-inc" onclick="setPubMode('mob','inc')">Allowlist</button>
+          <button class="pub-toggle-btn" id="pt-mob-exc" onclick="setPubMode('mob','exc')">Blocklist</button>
+        </div>
+        <div class="pub-target-row">
+          <input class="pub-input" id="pi-mob" placeholder="com.myntra, com.nykaa…" />
+          <button class="pub-add-btn" onclick="addPub('mob')">+ Add</button>
+        </div>
+        <div class="pub-tags" id="pt-mob">
+          <div class="pub-tag-item">com.myntra<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item">com.nykaa<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="channel-card on">
+      <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>DOOH<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cdooh','Based on your pincodes: Premium malls (Palladium, Select Citywalk, Bandra Kurla) and metro stations (Andheri, Connaught Place). Exclude highway — wrong audience for fashion retargeting.')"><i class="ti ti-sparkles"></i></div></div>
+      <div class="channel-sub">1920×1080 · 16:9 full-motion</div>
+      <div class="upload-zone" style="margin-bottom:8px">
+        <div class="upload-zone-label">1 creative uploaded</div>
+        <div><span class="tag green">OOH_Summer.mp4</span></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">Zone + screen type</div>
+      <div class="pub-target">
+        <div class="pub-tags" style="margin-bottom:8px">
+          <div class="pub-tag-item">Premium malls<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item">Metro stations<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item excl">Highway ✕</div>
+        </div>
+        <div class="pub-target-row">
+          <input class="pub-input" id="pi-dooh" placeholder="Add zone or screen type…" />
+          <button class="pub-add-btn" onclick="addPub('dooh')">+ Add</button>
+        </div>
+      </div>
+    </div>
+    <div class="channel-card on">
+      <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>CTV<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cctv','For female fashion intenders 22–38: JioCinema and Hotstar have highest household overlap. Target lifestyle, drama, and fashion content. Avoid cricket — strong male skew.')"><i class="ti ti-sparkles"></i></div></div>
+      <div class="channel-sub">VAST 4.0 · 15s / 30s pre-roll</div>
+      <div class="upload-zone" style="margin-bottom:8px">
+        <div class="upload-zone-label">VAST URL pasted</div>
+        <div><span class="tag green">VAST URL ✓</span></div>
+      </div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">Platform + genre</div>
+      <div class="pub-target">
+        <div class="pub-tags" style="margin-bottom:8px">
+          <div class="pub-tag-item">JioCinema<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item">Hotstar<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+          <div class="pub-tag-item excl">Cricket content ✕</div>
+        </div>
+        <div class="pub-target-row">
+          <input class="pub-input" id="pi-ctv" placeholder="Add platform or genre…" />
+          <button class="pub-add-btn" onclick="addPub('ctv')">+ Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn" onclick="goTo(3)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" onclick="goTo(5)">Launch campaign <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ── STEP 5: LIVE ── -->
+<div class="screen" id="screen-5">
+  <div class="screen-tag">Step 5 · Live</div>
+  <div class="screen-title">Campaign live — real-time delivery</div>
+  <div class="screen-sub">Hiveclothing_SS26_Retargeting_Jun26 · Day 14 of 30 · <span class="badge badge-live">● Live</span></div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-val">14.2L</div><div class="stat-lbl">Impressions served</div></div>
+    <div class="stat-card"><div class="stat-val">₹2,96,400</div><div class="stat-lbl">Spend to date</div></div>
+    <div class="stat-card"><div class="stat-val">37%</div><div class="stat-lbl">Budget used · day 14</div></div>
+  </div>
+  <div class="section-label">Channel delivery — live edit enabled</div>
+  <div class="budget-table">
+    <div class="budget-row hdr"><span>Channel</span><span>Delivered</span><span>Budget left</span><span>Status</span><span>Pause</span><span></span></div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">Web</span>
+      <span>5.8L impr</span>
+      <input class="budget-input" value="₹64,000" />
+      <span class="badge badge-live">● Live</span>
+      <div class="lock-btn"><i class="ti ti-player-pause"></i></div>
+      <div class="spark-btn" onclick="spark('lv-web','Web is pacing slightly fast — will exhaust budget by day 22 at current rate. Recommend reducing daily cap 15% or shifting ₹20,000 to DOOH.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">Mobile</span>
+      <span>4.1L impr</span>
+      <input class="budget-input" value="₹1,02,000" />
+      <span class="badge badge-live">● Live</span>
+      <div class="lock-btn"><i class="ti ti-player-pause"></i></div>
+      <div class="spark-btn" onclick="spark('lv-mob','Mobile CTR is 2.4× campaign average — your best-performing channel. Consider shifting ₹30,000 from Web here for higher overall CTR.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">DOOH</span>
+      <span>3.2L impr</span>
+      <input class="budget-input" value="₹1,22,000" />
+      <span class="badge badge-warn">Optimising</span>
+      <div class="lock-btn"><i class="ti ti-player-pause"></i></div>
+      <div class="spark-btn" onclick="spark('lv-dooh','DOOH floor spiked in Palladium Mumbai yesterday. AI rerouted ₹12,000 to Select Citywalk Delhi — same audience profile, lower floor. No action needed.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="budget-row">
+      <span style="font-size:13px;font-weight:600">CTV</span>
+      <span>1.1L impr</span>
+      <input class="budget-input" value="₹1,08,000" />
+      <span class="badge badge-live">● Live</span>
+      <div class="lock-btn"><i class="ti ti-player-pause"></i></div>
+      <div class="spark-btn" onclick="spark('lv-ctv','CTV completion rate is 84% — above benchmark. Drama genre on Hotstar outperforming sports 3:1. AI has already shifted genre allocation.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+  </div>
+  <div class="section-label">Auction activity — last 30 min</div>
+  <div class="mini-chart">
+    <div class="bar" style="height:30%"></div><div class="bar" style="height:55%"></div><div class="bar" style="height:45%"></div><div class="bar hi" style="height:80%"></div><div class="bar" style="height:60%"></div><div class="bar hi" style="height:90%"></div><div class="bar" style="height:70%"></div><div class="bar hi" style="height:85%"></div><div class="bar" style="height:65%"></div><div class="bar hi" style="height:95%"></div><div class="bar" style="height:72%"></div><div class="bar hi" style="height:88%"></div><div class="bar" style="height:50%"></div><div class="bar hi" style="height:92%"></div><div class="bar" style="height:68%"></div>
+  </div>
+  <div class="nav-row">
+    <button class="btn" onclick="goTo(4)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" onclick="goTo(6)">View AI agent <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ── STEP 6: AI AGENT ── -->
+<div class="screen" id="screen-6">
+  <div class="screen-tag">Step 6 · AI Agent</div>
+  <div class="screen-title">AI agent activity</div>
+  <div class="screen-sub">Autonomous — running continuously. Every action is logged and explainable.</div>
+  <div class="section-label">Recent optimisations</div>
+  <div class="timeline">
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#0050c8"></div>
+      <div class="tl-body">
+        <div class="tl-text">DOOH floor spike detected — bid rerouted to Web inventory</div>
+        <div class="tl-why" onclick="spark('why1','Palladium Mumbai floor jumped ₹22→₹38 CPM at 6pm peak. AI rerouted ₹8,000 to TOI web inventory in same pincode. Net CPM saved: ₹12 per thousand impressions.')"><i class="ti ti-sparkles" style="font-size:10px"></i> Why did AI do this?</div>
+      </div>
+      <div class="tl-time">2 min ago</div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#065f46"></div>
+      <div class="tl-body">
+        <div class="tl-text">Budget shift: +₹12,000 moved to Mobile (CTR 2.4× target)</div>
+        <div class="tl-why" onclick="spark('why2','Mobile CTR hit 1.82% against 0.75% target. AI identified Myntra and Nykaa app placements as the driver and shifted budget toward those apps within your allowlist.')"><i class="ti ti-sparkles" style="font-size:10px"></i> Why did AI do this?</div>
+      </div>
+      <div class="tl-time">18 min ago</div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#0050c8"></div>
+      <div class="tl-body">
+        <div class="tl-text">Bid raised on Web · Mumbai 400050 high-density cluster</div>
+        <div class="tl-why" onclick="spark('why3','Audience density in 400050 (Bandra) is 3× average — high competition from other fashion advertisers. AI raised bid 18% to maintain win rate above 40% threshold.')"><i class="ti ti-sparkles" style="font-size:10px"></i> Why did AI do this?</div>
+      </div>
+      <div class="tl-time">41 min ago</div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#92400e"></div>
+      <div class="tl-body">
+        <div class="tl-text">Creative B underperforming — Creative A now serving 100%</div>
+        <div class="tl-why" onclick="spark('why4','Creative B (product flat lay) had 0.3% CTR vs Creative A (lifestyle model) at 1.8% CTR across 50K+ impressions. AI switched fully to A and flagged B for revision.')"><i class="ti ti-sparkles" style="font-size:10px"></i> Why did AI do this?</div>
+      </div>
+      <div class="tl-time">1h 12m ago</div>
+    </div>
+    <div class="tl-row">
+      <div class="tl-dot" style="background:#065f46"></div>
+      <div class="tl-body"><div class="tl-text">Pacing on track — throttling not required</div></div>
+      <div class="tl-time">2h ago</div>
+    </div>
+  </div>
+  <div class="section-label">Current AI state</div>
+  <div class="ai-state-row">
+    <div class="ai-state-card"><div class="ai-state-lbl">Pacing</div><div class="ai-state-val green">On track</div></div>
+    <div class="ai-state-card"><div class="ai-state-lbl">Floor dropout risk</div><div class="ai-state-val amber">DOOH — monitoring</div></div>
+  </div>
+  <div class="nav-row">
+    <button class="btn" onclick="goTo(5)"><i class="ti ti-arrow-left"></i> Back</button>
+    <button class="btn btn-primary" onclick="goTo(7)">View report <i class="ti ti-arrow-right"></i></button>
+  </div>
+</div>
+
+<!-- ── STEP 7: REPORT ── -->
+<div class="screen" id="screen-7">
+  <div class="screen-tag">Step 7 · Report</div>
+  <div class="screen-title">Daily report + MAID export</div>
+  <div class="screen-sub">27 May 2026 · feeds into next campaign cycle automatically</div>
+  <div class="stat-row">
+    <div class="stat-card"><div class="stat-val">2.18L</div><div class="stat-lbl">Impressions today</div></div>
+    <div class="stat-card"><div class="stat-val">1.42L</div><div class="stat-lbl">Unique reach</div></div>
+    <div class="stat-card"><div class="stat-val">₹44,800</div><div class="stat-lbl">Spend today</div></div>
+  </div>
+  <div class="data-table">
+    <div class="data-row"><span class="data-key">Effective CPM</span><div class="data-right"><span class="data-val">₹20.5</span><div class="spark-btn" onclick="spark('rpt-cpm','₹20.5 blended CPM is 12% below benchmark for this channel mix. DOOH is pulling your average down — that\'s a good thing. Strong result.')"><i class="ti ti-sparkles"></i></div></div></div>
+    <div class="data-row"><span class="data-key">CTR (web + app)</span><div class="data-right"><span class="data-val">1.82%</span><div class="spark-btn" onclick="spark('rpt-ctr','1.82% CTR is 2.4× industry average for fashion retargeting. Creative A (lifestyle model) is driving this — carry it forward into the next cycle.')"><i class="ti ti-sparkles"></i></div></div></div>
+    <div class="data-row"><span class="data-key">DOOH proof-of-play</span><div class="data-right"><span class="data-val">98.4% confirmed</span><div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Percentage of DOOH impressions with confirmed playback signal. 98.4% is excellent — near-complete delivery verification.</div></div></div></div>
+    <div class="data-row"><span class="data-key">CTV completion rate</span><div class="data-right"><span class="data-val">84%</span><div class="spark-btn" onclick="spark('rpt-ctv','84% completion is above the 72% benchmark. Drama genre on Hotstar is the driver. Recommend increasing CTV budget by 5% in the next cycle.')"><i class="ti ti-sparkles"></i></div></div></div>
+  </div>
+  <div class="section-label">MAID export</div>
+  <div class="export-grid">
+    <div class="export-card"><div class="export-title">Refreshed MAIDs</div><div class="export-sub">3,86,400 IDs · updated today</div></div>
+    <div class="export-card"><div class="export-title">New DOOH signal</div><div class="export-sub">Exposure segments · 12,200 new</div></div>
+  </div>
+  <div class="cycle-note">
+    <i class="ti ti-refresh" style="font-size:15px;color:#0050c8;flex-shrink:0"></i>
+    Refreshed MAIDs and DOOH exposure segments auto-populate into the next campaign cycle's audience definition in Step 1.
+  </div>
+  <div class="ai-suggestion visible" style="margin-bottom:20px">
+    <div class="ai-sug-label"><i class="ti ti-sparkles"></i> AI post-campaign read</div>
+    <div class="ai-sug-text">CTV outperformed projections by 18%. Recommend shifting 5% budget from Web to CTV in next cycle. Creative A should be carried forward — Creative B can be retired. Audience match rate will improve to ~94% with the refreshed MAID list.</div>
+    <div class="ai-sug-actions">
+      <button class="ai-sug-btn ai-sug-accept" onclick="goTo(0);this.closest('.ai-suggestion').style.display='none'">Apply to next cycle ↗</button>
+      <button class="ai-sug-btn ai-sug-dismiss" onclick="this.closest('.ai-suggestion').style.display='none'">Dismiss</button>
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn" onclick="goTo(6)"><i class="ti ti-arrow-left"></i> Back</button>
+    <div style="display:flex;gap:10px">
+      <button class="btn"><i class="ti ti-download"></i> Download report</button>
+      <button class="btn btn-primary" onclick="goTo(0)"><i class="ti ti-refresh"></i> Start next cycle</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- floating suggestion panel -->
+<div id="floater" class="ai-suggestion" style="display:none;position:fixed;bottom:24px;right:24px;max-width:320px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,0.1)"></div>
+
+<script>
+const STEPS = ['Prompt','Audience','Reach','Budget','Creatives','Live','AI Agent','Report'];
+let current = 0;
+const locked = { web:false, mobile:false, dooh:false, ctv:false };
+
+const HINTS = [
+  "Retargeting campaign for Hiveclothing — users who saw our summer collection, ₹8L budget, 30 days, heavier on CTV and DOOH, Mumbai and Delhi only",
+  "Brand awareness for a new fintech app — all channels, ₹15L, 45 days, pan-India, mobile-first",
+  "Luxury fashion launch — CTV and DOOH only, metro cities, ₹20L, 3 weeks, premium inventory",
+  "Performance retargeting — mobile app installs, ₹5L, 2 weeks, tier 1 and tier 2 cities"
+];
+
+function fillHint(i) {
+  document.getElementById('promptInput').value = HINTS[i];
+  document.getElementById('promptInput').focus();
+}
+
+function submitPrompt() {
+  const v = document.getElementById('promptInput').value.trim();
+  if (!v) return;
+  document.getElementById('progressWrap').style.display = 'block';
+  goTo(1);
+  const g = document.getElementById('gen1');
+  g.classList.add('visible');
+  setTimeout(() => g.classList.remove('visible'), 1800);
+}
+
+function buildProgress() {
+  const wrap = document.getElementById('progressSteps');
+  wrap.innerHTML = '';
+  STEPS.forEach((s, i) => {
+    const item = document.createElement('div');
+    item.className = 'prog-item';
+    item.innerHTML = `<div class="prog-dot" id="pd-${i}" onclick="goTo(${i})">${i === 0 ? '<i class="ti ti-wand" style="font-size:10px"></i>' : i}</div><div class="prog-lbl" id="pl-${i}">${s}</div>`;
+    wrap.appendChild(item);
+    if (i < STEPS.length - 1) {
+      const line = document.createElement('div');
+      line.className = 'prog-line'; line.id = `pline-${i}`;
+      wrap.appendChild(line);
+    }
+  });
+}
+
+function updateProgress() {
+  STEPS.forEach((_, i) => {
+    const dot = document.getElementById(`pd-${i}`);
+    const lbl = document.getElementById(`pl-${i}`);
+    dot.className = 'prog-dot';
+    lbl.className = 'prog-lbl';
+    if (i < current) {
+      dot.classList.add('done');
+      dot.innerHTML = '<i class="ti ti-check" style="font-size:10px"></i>';
+      lbl.classList.add('done');
+    } else if (i === current) {
+      dot.classList.add('active');
+      dot.innerHTML = i === 0 ? '<i class="ti ti-wand" style="font-size:10px"></i>' : i;
+      lbl.classList.add('active');
+    } else {
+      dot.innerHTML = i === 0 ? '<i class="ti ti-wand" style="font-size:10px"></i>' : i;
+    }
+    if (i < STEPS.length - 1) {
+      document.getElementById(`pline-${i}`).className = i < current ? 'prog-line done' : 'prog-line';
+    }
+  });
+  const pct = current === 0 ? 0 : Math.round((current / (STEPS.length - 1)) * 100);
+  document.getElementById('pbarFill').style.width = pct + '%';
+  document.getElementById('stepCounter').textContent = current === 0 ? 'Start' : `Step ${current} of ${STEPS.length - 1}`;
+}
+
+function goTo(n) {
+  document.getElementById(`screen-${current}`).classList.remove('active');
+  current = n;
+  document.getElementById(`screen-${current}`).classList.add('active');
+  if (n > 0) document.getElementById('progressWrap').style.display = 'block';
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function selectSeg(el) {
+  el.parentElement.querySelectorAll('.seg-option').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+/* ── REACH: target vs available ── */
+const reachAvail = { web: 1820000, mobile: 1260000, dooh: 580000, ctv: 180000 };
+function parseNum(s) { return parseInt(String(s).replace(/[^0-9]/g, ''), 10) || 0; }
+function fmtIndian(n) {
+  const s = String(n);
+  if (s.length <= 3) return s;
+  const last3 = s.slice(-3);
+  const rest = s.slice(0, -3).replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+  return rest + ',' + last3;
+}
+function fmtLakh(n) { return (Math.round(n / 10000) / 10) + 'L'; }
+
+function updateReach(ch, reformat) {
+  const inp = document.getElementById('rt-' + ch);
+  const target = parseNum(inp.value);
+  const avail = reachAvail[ch];
+  const pct = avail ? (target / avail) * 100 : 0;
+  const fill = document.getElementById('rf-' + ch);
+  const status = document.getElementById('rs-' + ch);
+  fill.style.width = Math.min(pct, 100) + '%';
+  if (target > avail) {
+    fill.classList.add('over');
+    inp.classList.add('over');
+    status.className = 'reach-status over';
+    status.innerHTML = '<i class="ti ti-alert-triangle"></i> Over by ' + fmtLakh(target - avail);
+  } else {
+    fill.classList.remove('over');
+    inp.classList.remove('over');
+    status.className = 'reach-status';
+    status.textContent = Math.round(pct) + '% of available';
+  }
+  if (reformat) inp.value = fmtIndian(target);
+  updateReachTotal();
+}
+
+function updateReachTotal() {
+  let sum = 0, availSum = 0;
+  ['web', 'mobile', 'dooh', 'ctv'].forEach(c => {
+    const el = document.getElementById('rt-' + c);
+    if (el) sum += parseNum(el.value);
+    availSum += reachAvail[c];
+  });
+  const out = document.getElementById('reach-total-val');
+  if (out) {
+    const over = sum > availSum;
+    out.innerHTML = fmtLakh(sum) + ' <span>of ' + fmtLakh(availSum) + ' available</span>';
+    out.style.color = over ? '#dc2626' : '#111';
+  }
+}
+
+function spark(id, text) {
+  const el = document.getElementById('sug-' + id);
+  const html = `<div class="ai-sug-label"><i class="ti ti-sparkles"></i> AI suggestion</div><div class="ai-sug-text">${text}</div><div class="ai-sug-actions"><button class="ai-sug-btn ai-sug-accept" onclick="this.closest('.ai-suggestion').classList.remove('visible')">Accept</button><button class="ai-sug-btn ai-sug-regen" onclick="spark('${id}','${text.replace(/'/g,"\\'")}')">↻ Again</button><button class="ai-sug-btn ai-sug-dismiss" onclick="this.closest('.ai-suggestion').classList.remove('visible');document.getElementById('floater').style.display='none'">Dismiss</button></div>`;
+  if (el) {
+    el.innerHTML = html; el.classList.add('visible');
+  } else {
+    const f = document.getElementById('floater');
+    f.innerHTML = html; f.style.display = 'block'; f.classList.add('visible');
+  }
+}
+
+function toggleLock(ch) {
+  locked[ch] = !locked[ch];
+  const btn = document.getElementById('lock-' + ch);
+  btn.className = locked[ch] ? 'lock-btn locked' : 'lock-btn';
+  btn.innerHTML = locked[ch] ? '<i class="ti ti-lock"></i>' : '<i class="ti ti-lock-open"></i>';
+}
+
+function addPub(ch) {
+  const inp = document.getElementById('pi-' + ch);
+  if (!inp || !inp.value.trim()) return;
+  const tags = document.getElementById('pt-' + ch);
+  if (!tags) return;
+  const t = document.createElement('div');
+  t.className = 'pub-tag-item';
+  t.innerHTML = inp.value.trim() + '<span class="pub-tag-x" onclick="removePub(this)"> ✕</span>';
+  tags.appendChild(t);
+  inp.value = '';
+}
+
+function removePub(el) { el.parentElement.remove(); }
+
+function setPubMode(ch, mode) {
+  ['inc','exc'].forEach(m => {
+    const b = document.getElementById(`pt-${ch}-${m}`);
+    if (b) b.className = 'pub-toggle-btn' + (m === mode ? ` active-${m}` : '');
+  });
+}
+
+buildProgress();
+updateProgress();
+['web', 'mobile', 'dooh', 'ctv'].forEach(c => updateReach(c, true));
+</script>
+</body>
+</html>
