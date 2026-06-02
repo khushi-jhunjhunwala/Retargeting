@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADCP — Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#1a1a1a;min-height:100vh;font-size:14px}
+
+/* ════ NAV ════ */
+.topnav{display:flex;align-items:center;height:52px;padding:0 28px;border-bottom:1px solid #e8e8e8;background:#fff;position:sticky;top:0;z-index:300;gap:0}
+.brand{font-size:13px;font-weight:700;color:#0050c8;letter-spacing:.03em;margin-right:28px;flex-shrink:0}
+.brand span{color:#1a1a1a;font-weight:400}
+.nav-tabs{display:flex;align-items:center;gap:2px;flex:1}
+.nav-tab{display:flex;align-items:center;gap:6px;height:52px;padding:0 14px;font-size:12px;font-weight:600;color:#aaa;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:#555;background:#fafafa}
+.nav-tab.active{color:#0050c8;border-bottom-color:#0050c8}
+.nav-tab i{font-size:14px}
+.nav-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.step-counter{font-size:12px;color:#888}
+.btn{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #e0e0e0;background:#fff;color:#444;transition:all .15s}
+.btn:hover{background:#f5f5f5}
+.btn-primary{background:#0050c8;color:#fff;border-color:#0050c8}
+.btn-primary:hover{background:#0040a8}
+.btn-sm{height:30px;padding:0 12px;font-size:11px;font-weight:600;border-radius:6px}
+.btn-lg{height:42px;padding:0 22px;font-size:13px;border-radius:9px}
+
+/* ════ VIEWS ════ */
+.view{display:none}
+.view.active{display:block}
+
+/* ════ PROGRESS BAR ════ */
+.progress-wrap{padding:14px 32px 0;background:#fff;position:sticky;top:52px;z-index:199}
+.progress-steps{display:flex;align-items:flex-start}
+.prog-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.prog-dot{width:26px;height:26px;border-radius:50%;border:1.5px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#bbb;transition:all .2s;flex-shrink:0}
+.prog-dot.active{background:#fff;border-color:#0050c8;color:#0050c8;box-shadow:0 0 0 3px rgba(0,80,200,.12)}
+.prog-dot.done{background:#0050c8;border-color:#0050c8;color:#fff}
+.prog-line{flex:1;height:1.5px;margin:0 3px;margin-top:12px;background:#e0e0e0;transition:background .3s}
+.prog-line.done{background:#0050c8}
+.prog-lbl{font-size:9px;color:#bbb;white-space:nowrap;text-align:center;max-width:72px;line-height:1.3}
+.prog-lbl.active{color:#0050c8;font-weight:600}
+.prog-lbl.done{color:#555}
+.pbar-line{height:2px;background:#f0f0f0;margin-top:10px;border-radius:2px;overflow:hidden}
+.pbar-fill{height:100%;background:#0050c8;border-radius:2px;transition:width .35s ease}
+
+/* ════ CAMPAIGN MAIN ════ */
+.camp-main{flex:1;padding:28px 32px 48px;max-width:800px;margin:0 auto;width:100%}
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* screen headers */
+.screen-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0050c8;background:#eef2ff;padding:3px 9px;border-radius:4px;margin-bottom:8px}
+.screen-title{font-size:20px;font-weight:700;color:#111;margin-bottom:4px}
+.screen-sub{font-size:13px;color:#777;margin-bottom:24px}
+
+/* fields */
+.field-wrap{margin-bottom:16px}
+.field-label-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.flabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#999}
+.field-box{height:38px;background:#f8f8f8;border:1px solid #e4e4e4;border-radius:8px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#1a1a1a}
+.field-box.filled{background:#fff;border-color:#c0cfe8}
+.field-box.placeholder{color:#bbb;font-style:italic}
+.editable-field{height:38px;border:1px solid #c0cfe8;border-radius:8px;padding:0 12px;font-size:13px;width:100%;outline:none;background:#fff;font-family:inherit;color:#1a1a1a;transition:border-color .15s}
+.editable-field:focus{border-color:#0050c8}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#ccc;margin:20px 0 10px}
+
+/* tooltip */
+.tooltip-wrap{position:relative;display:inline-flex}
+.tooltip-icon{width:15px;height:15px;border-radius:50%;border:1px solid #d8d8d8;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:help;color:#bbb;font-size:10px;flex-shrink:0}
+.tooltip-icon:hover{border-color:#999;color:#666}
+.tooltip-box{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#1a1a1a;color:#f5f5f5;font-size:11px;line-height:1.5;padding:7px 11px;border-radius:6px;width:210px;z-index:999;pointer-events:none}
+.tooltip-wrap:hover .tooltip-box{display:block}
+
+/* spark */
+.spark-btn{width:20px;height:20px;border-radius:5px;background:#f3f0ff;border:1px solid #c4b5fd;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#6d28d9;font-size:11px;flex-shrink:0;transition:all .12s}
+.spark-btn:hover{background:#ede9fe;border-color:#7c3aed}
+.ai-suggestion{background:#faf8ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 14px;margin-top:6px;display:none}
+.ai-suggestion.visible{display:block;animation:fadeUp .15s ease}
+.ai-sug-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7c3aed;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.ai-sug-text{font-size:12px;color:#3b0764;line-height:1.55;margin-bottom:8px}
+.ai-sug-actions{display:flex;gap:7px}
+.ai-sug-btn{font-size:11px;font-weight:600;padding:4px 12px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .12s}
+.ai-sug-accept{background:#5b21b6;color:#fff;border-color:#5b21b6}
+.ai-sug-dismiss{background:#fff;color:#888;border-color:#e0e0e0}
+
+/* tags */
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 8px;border-radius:4px;margin:2px}
+.tag.blue{background:#eef2ff;color:#0050c8}
+.tag.green{background:#ecfdf5;color:#065f46}
+
+/* KPI chips */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+.kpi-card{border:1px solid #e4e4e4;border-radius:9px;padding:11px 13px;cursor:pointer;transition:all .15s;background:#fff}
+.kpi-card:hover{border-color:#c0cfe8;background:#fafcff}
+.kpi-card.sel{border-color:#0050c8;background:#f5f8ff}
+.kpi-card-label{font-size:12px;font-weight:700;color:#555;margin-bottom:2px}
+.kpi-card.sel .kpi-card-label{color:#0050c8}
+.kpi-card-sub{font-size:10px;color:#bbb;line-height:1.4}
+
+/* audience picker cards */
+.aud-pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.aud-pick-card{border:1px solid #e4e4e4;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;background:#fff;position:relative}
+.aud-pick-card:hover{border-color:#c0cfe8;background:#fafcff}
+.aud-pick-card.sel{border-color:#0050c8;background:#f5f8ff}
+.aud-pick-name{font-size:13px;font-weight:700;color:#111;margin-bottom:3px}
+.aud-pick-card.sel .aud-pick-name{color:#0050c8}
+.aud-pick-sub{font-size:11px;color:#999;margin-bottom:8px}
+.aud-pick-tags{display:flex;flex-wrap:wrap;gap:3px}
+.aud-pick-meta{font-size:11px;color:#bbb;margin-top:8px;padding-top:7px;border-top:1px solid #f0f0f0}
+.aud-pick-check{position:absolute;top:12px;right:12px;width:18px;height:18px;border-radius:50%;background:#0050c8;display:none;align-items:center;justify-content:center}
+.aud-pick-check i{font-size:10px;color:#fff}
+.aud-pick-card.sel .aud-pick-check{display:flex}
+.new-aud-card{border:1.5px dashed #d0d9ed;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;color:#0050c8;font-size:13px;font-weight:600;min-height:100px}
+.new-aud-card:hover{background:#f5f8ff;border-color:#0050c8}
+.selected-aud-preview{background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:none}
+.sap-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sap-name{font-size:13px;font-weight:700;color:#0050c8}
+.sap-change{font-size:11px;color:#888;cursor:pointer;text-decoration:underline}
+.sap-change:hover{color:#0050c8}
+.sap-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.sap-stats{display:flex;gap:16px}
+.sap-stat{font-size:11px;color:#666}
+.sap-stat strong{color:#111}
+
+/* reach + budget step */
+.ch-table{border:1px solid #e8e8e8;border-radius:10px;overflow:visible;margin-bottom:8px}
+.ch-row{display:grid;grid-template-columns:32px 110px 1fr 86px 76px 32px 22px;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px}
+.ch-row:last-child{border-bottom:none}
+.ch-row.hdr{background:#f8f8f8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#bbb;border-radius:10px 10px 0 0}
+.ch-toggle{width:28px;height:16px;border-radius:8px;background:#e0e0e0;position:relative;cursor:pointer;transition:background .15s;flex-shrink:0}
+.ch-toggle.on{background:#0050c8}
+.ch-toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}
+.ch-toggle.on::after{left:14px}
+.budget-input{height:30px;border:1px solid #e0e0e0;border-radius:6px;padding:0 8px;font-size:12px;width:100%;background:#fff;color:#1a1a1a;outline:none;transition:all .15s}
+.budget-input:focus{border-color:#0050c8;background:#f5f8ff}
+.budget-input:disabled{background:#f5f5f5;color:#bbb;border-color:#f0f0f0}
+.lock-btn{width:26px;height:26px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#bbb;font-size:12px;transition:all .15s}
+.lock-btn.locked{background:#fef3c7;border-color:#f59e0b;color:#b45309}
+.rebalance-note{font-size:11px;color:#666;background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.budget-total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f5f8ff;border:1px solid #d0dcf0;border-radius:8px;margin-bottom:18px;font-size:12px}
+.btotal-ok{color:#065f46;font-weight:600}
+.btotal-warn{color:#991b1b;font-weight:600}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#f8f8f8;border-radius:10px;padding:14px 16px}
+.stat-val{font-size:22px;font-weight:700;color:#111}
+.stat-lbl{font-size:11px;color:#999;margin-top:3px}
+.pbar-wrap{margin-bottom:12px}
+.pbar-labels{display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:5px;align-items:center}
+.pbar-track{height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.pbar-fill-bar{height:100%;border-radius:3px;background:#0050c8}
+
+/* channel creatives */
+.channel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.channel-card{border:1px solid #e4e4e4;border-radius:10px;padding:14px 16px;background:#fff}
+.channel-card.on{border-color:#0050c8;background:#f5f8ff}
+.channel-name{font-size:13px;font-weight:700;color:#111;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.channel-card.on .channel-name{color:#0050c8}
+.channel-sub{font-size:11px;color:#999;margin-bottom:10px}
+.channel-card.on .channel-sub{color:#6a8fc8}
+.check-dot{width:15px;height:15px;border-radius:50%;background:#0050c8;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-dot i{font-size:9px;color:#fff}
+.upload-zone{border:1.5px dashed #d0d9ed;border-radius:8px;padding:14px 12px;text-align:center;background:#fafbff;margin-top:4px}
+.upload-zone-label{font-size:12px;color:#aaa;margin-bottom:6px}
+.pub-target{background:#f9fafb;border:1px solid #e8e8e8;border-radius:8px;padding:10px 12px;margin-top:8px}
+.pub-toggle{display:flex;gap:6px;margin-bottom:7px}
+.pub-toggle-btn{height:24px;padding:0 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #e0e0e0;background:#fff;color:#888;transition:all .12s}
+.pub-toggle-btn.active-inc{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+.pub-toggle-btn.active-exc{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+.pub-target-row{display:flex;gap:6px;margin-bottom:6px}
+.pub-input{flex:1;height:28px;border:1px solid #e0e0e0;border-radius:6px;padding:0 8px;font-size:12px;outline:none;background:#fff}
+.pub-input:focus{border-color:#0050c8}
+.pub-add-btn{height:28px;padding:0 10px;border-radius:6px;background:#0050c8;color:#fff;border:none;font-size:11px;font-weight:600;cursor:pointer}
+.pub-tags{display:flex;flex-wrap:wrap;gap:4px}
+.pub-tag-item{display:inline-flex;align-items:center;gap:4px;background:#ecfdf5;color:#065f46;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
+.pub-tag-item.excl{background:#fef2f2;color:#991b1b}
+.pub-tag-x{cursor:pointer;opacity:.6;font-size:10px}
+.pub-tag-x:hover{opacity:1}
+
+/* submission */
+.submit-wrap{text-align:center;padding:48px 24px}
+.submit-icon{width:64px;height:64px;border-radius:50%;background:#eef2ff;border:2px solid #c0cfe8;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#0050c8}
+.submit-title{font-size:22px;font-weight:700;color:#111;margin-bottom:8px}
+.submit-sub{font-size:13px;color:#777;margin-bottom:28px;line-height:1.6}
+.submit-summary{border:1px solid #e8e8e8;border-radius:10px;overflow:hidden;margin-bottom:24px;text-align:left}
+.submit-row{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid #f0f0f0;font-size:13px}
+.submit-row:last-child{border-bottom:none}
+.submit-key{color:#666}
+.submit-val{color:#111;font-weight:600}
+.submit-status{display:inline-flex;align-items:center;gap:6px;background:#fff8ec;border:1px solid #fed7aa;border-radius:8px;padding:10px 16px;font-size:12px;color:#9a3412;font-weight:500;margin-bottom:24px}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px}
+.badge-live{background:#ecfdf5;color:#065f46}
+.badge-warn{background:#fffbeb;color:#92400e}
+
+/* nav row */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid #f0f0f0}
+
+/* prompt */
+.prompt-screen{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0}
+.prompt-logo{font-size:28px;font-weight:800;color:#0050c8;margin-bottom:6px;letter-spacing:-.02em}
+.prompt-headline{font-size:14px;color:#888;margin-bottom:32px}
+.prompt-box-wrap{width:100%;max-width:600px;position:relative}
+.prompt-box{width:100%;min-height:76px;padding:14px 52px 14px 16px;border:1.5px solid #c0cfe8;border-radius:12px;font-size:14px;color:#1a1a1a;line-height:1.6;outline:none;resize:none;background:#f5f8ff;font-family:inherit;transition:border-color .2s}
+.prompt-box:focus{border-color:#0050c8;background:#fff}
+.prompt-box::placeholder{color:#aab8d4}
+.prompt-submit{position:absolute;bottom:12px;right:12px;width:34px;height:34px;border-radius:9px;background:#0050c8;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;transition:background .15s}
+.prompt-submit:hover{background:#0040a8}
+.prompt-hints{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:12px}
+.prompt-hint{font-size:11px;color:#0050c8;background:#eef2ff;border:1px solid #c0cfe8;border-radius:20px;padding:4px 12px;cursor:pointer;transition:all .12s}
+.prompt-hint:hover{background:#dce8ff}
+.gen-bar{display:none;align-items:center;gap:10px;background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:12px 16px;margin-bottom:20px}
+.gen-bar.show{display:flex}
+.gen-spin{width:16px;height:16px;border:2px solid #c0cfe8;border-top-color:#0050c8;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-txt{font-size:12px;color:#0050c8}
+
+/* ════ AUDIENCE MODULE VIEW ════ */
+#aud-view{background:#f5f6f8;min-height:calc(100vh - 52px)}
+.aud-view-inner{display:flex;flex-direction:row;min-height:calc(100vh - 52px)}
+
+/* aud entry */
+.aud-entry{padding:48px 32px;flex:1;display:flex;align-items:center;justify-content:center}
+.aud-entry-inner{max-width:700px;width:100%}
+.aud-entry-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px}
+.aud-entry-title{font-size:20px;font-weight:700;color:#111;margin-bottom:4px}
+.aud-entry-sub{font-size:13px;color:#888}
+
+/* saved audience list */
+.saved-aud-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.saved-card{border:1px solid #e4e4e4;border-radius:10px;padding:14px 16px;background:#fff;cursor:pointer;transition:all .15s}
+.saved-card:hover{border-color:#c0cfe8;box-shadow:0 2px 12px rgba(0,80,200,.07)}
+.saved-card-name{font-size:13px;font-weight:700;color:#111;margin-bottom:3px}
+.saved-card-sub{font-size:11px;color:#999;margin-bottom:8px;line-height:1.4}
+.saved-card-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.saved-card-meta{font-size:10px;color:#bbb;display:flex;align-items:center;gap:5px;border-top:1px solid #f0f0f0;padding-top:7px;margin-top:auto}
+.new-saved-card{border:1.5px dashed #d0d9ed;border-radius:10px;padding:14px 16px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#0050c8;font-size:12px;font-weight:600;min-height:130px;transition:all .15s}
+.new-saved-card:hover{background:#f5f8ff;border-color:#0050c8}
+
+/* aud builder layout */
+.aud-builder{display:none;flex:1}
+.aud-builder.show{display:flex;flex-direction:row}
+.aud-builder-left{flex:1;padding:28px;overflow-y:auto;max-width:calc(100% - 300px)}
+.aud-builder-right{width:300px;background:#fff;border-left:1px solid #e8e8e8;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;padding:18px;display:flex;flex-direction:column}
+
+/* path entry */
+.path-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0}
+.path-card{border:1.5px solid #e4e4e4;border-radius:12px;padding:24px 20px;cursor:pointer;transition:all .18s;background:#fff;text-align:left;position:relative;overflow:hidden}
+.path-card:hover{border-color:#0050c8;transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,80,200,.1)}
+.path-card-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:20px;margin-bottom:14px}
+.path-card-badge.blue{background:#eef2ff;color:#0050c8}
+.path-card-badge.teal{background:#ecfdf5;color:#065f46}
+.path-card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.path-card-icon.blue{background:#eef2ff;color:#0050c8}
+.path-card-icon.teal{background:#ecfdf5;color:#065f46}
+.path-card-title{font-size:15px;font-weight:700;color:#111;margin-bottom:5px}
+.path-card-desc{font-size:12px;color:#888;line-height:1.5;margin-bottom:14px}
+.path-card-steps{display:flex;flex-direction:column;gap:4px}
+.pc-step{display:flex;align-items:center;gap:6px;font-size:11px;color:#777}
+.pc-step i{font-size:11px;color:#c0cfe8}
+.path-card-arrow{position:absolute;bottom:20px;right:20px;width:28px;height:28px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:13px;color:#bbb;transition:all .15s}
+.path-card:hover .path-card-arrow{background:#0050c8;color:#fff}
+
+/* aud flow step strip */
+.aud-step-strip{display:flex;align-items:center;gap:0;background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:10px 16px;margin-bottom:24px;overflow-x:auto}
+.aud-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#bbb;white-space:nowrap;cursor:pointer;padding:3px 8px;border-radius:6px;transition:all .15s}
+.aud-pill:hover{background:#f5f5f5;color:#555}
+.aud-pill.active{background:#eef2ff;color:#0050c8}
+.aud-pill.done{color:#065f46}
+.aud-pill .pill-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#bbb;flex-shrink:0;transition:all .15s}
+.aud-pill.active .pill-dot{border-color:#0050c8;color:#0050c8;background:#eef2ff}
+.aud-pill.done .pill-dot{border-color:#22c55e;background:#22c55e;color:#fff}
+.pill-sep{color:#e0e0e0;font-size:11px;margin:0 1px;flex-shrink:0}
+.aud-step-panel{display:none}
+.aud-step-panel.active{display:block;animation:fadeUp .18s ease}
+.aud-step-title{font-size:18px;font-weight:700;color:#111;margin-bottom:4px}
+.aud-step-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+
+/* aud form elements */
+.aud-flabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.aud-field-mb{margin-bottom:14px}
+.aud-input{height:36px;border:1px solid #e0e0e0;border-radius:8px;padding:0 12px;font-size:13px;width:100%;outline:none;background:#fff;color:#1a1a1a;transition:border-color .15s;font-family:inherit}
+.aud-input:focus{border-color:#0050c8;background:#f5f8ff}
+.aud-input::placeholder{color:#bbb}
+.aud-upload-zone{border:1.5px dashed #d0d9ed;border-radius:10px;padding:18px;text-align:center;background:#fafbff;cursor:pointer;transition:all .15s}
+.aud-upload-zone:hover{border-color:#0050c8;background:#f5f8ff}
+.aud-upload-icon{font-size:22px;color:#c0cfe8;margin-bottom:7px}
+.aud-upload-label{font-size:12px;color:#aaa;line-height:1.6}
+.aud-upload-label strong{color:#0050c8;font-weight:600}
+.aud-upload-done{display:flex;align-items:center;gap:8px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#065f46;font-weight:500}
+.aud-upload-done i{font-size:14px}
+.geo-tag{display:inline-flex;align-items:center;gap:5px;background:#eef2ff;color:#0050c8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid #c0cfe8}
+.geo-tag-x{cursor:pointer;color:#7096d8;font-size:10px}
+.geo-tag-x:hover{color:#0050c8}
+.quick-geos{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.quick-geo{font-size:11px;color:#0050c8;background:#f5f8ff;border:1px solid #c0cfe8;border-radius:5px;padding:3px 9px;cursor:pointer;transition:all .12s}
+.quick-geo:hover{background:#eef2ff}
+.gender-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+.gender-card{border:1px solid #e0e0e0;border-radius:9px;padding:11px;cursor:pointer;transition:all .15s;background:#fff;text-align:center}
+.gender-card:hover{border-color:#c0cfe8}
+.gender-card.sel{border-color:#0050c8;background:#f5f8ff}
+.gender-icon{font-size:16px;margin-bottom:3px;color:#bbb}
+.gender-card.sel .gender-icon{color:#0050c8}
+.gender-lbl{font-size:11px;font-weight:700;color:#888}
+.gender-card.sel .gender-lbl{color:#0050c8}
+.gender-cnt{font-size:10px;color:#bbb;margin-top:1px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;transition:all .12s;color:#666}
+.chip:hover{border-color:#c0cfe8;background:#f5f8ff;color:#0050c8}
+.chip.sel{background:#0050c8;color:#fff;border-color:#0050c8}
+.int-cats{display:flex;flex-wrap:wrap;gap:6px}
+.int-cat{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;transition:all .12s;color:#666}
+.int-cat:hover{border-color:#c0cfe8}
+.int-cat.sel{background:#0050c8;color:#fff;border-color:#0050c8}
+.aff-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.aff-chip{font-size:11px;padding:4px 11px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;color:#666;transition:all .12s}
+.aff-chip:hover{border-color:#c0cfe8}
+.aff-chip.sel{background:#eef2ff;color:#0050c8;border-color:#c0cfe8;font-weight:600}
+.excl-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid #e8e8e8;border-radius:9px;cursor:pointer;margin-bottom:8px;transition:border-color .15s}
+.excl-item:hover{border-color:#c0cfe8}
+.excl-label{font-size:12px;font-weight:600;color:#444}
+.excl-sub{font-size:11px;color:#bbb;margin-top:1px}
+.toggle-sw{width:34px;height:19px;border-radius:10px;background:#e0e0e0;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-sw.on{background:#0050c8}
+.toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle-sw.on::after{left:18px}
+.inferred-card{background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.inf-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.inf-icon{width:28px;height:28px;border-radius:8px;background:#0050c8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0}
+.inf-title{font-size:12px;font-weight:700;color:#0050c8}
+.inf-sub{font-size:11px;color:#6a8fc8}
+.inf-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.inf-tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px;background:#eef2ff;color:#0050c8}
+.inf-note{font-size:11px;color:#6a8fc8;line-height:1.5}
+.aud-divider{height:1px;background:#f0f0f0;margin:16px 0}
+.aud-step-nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding-top:18px;border-top:1px solid #f0f0f0}
+
+/* reach panel */
+.rp-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#bbb;margin-bottom:14px}
+.rp-big{text-align:center;padding:14px 0 12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px}
+.rp-num{font-size:34px;font-weight:800;color:#111;letter-spacing:-.02em;line-height:1;transition:all .25s}
+.rp-lbl{font-size:11px;color:#aaa;margin-top:5px}
+.rp-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:6px}
+.rp-badge.neutral{background:#f3f4f6;color:#6b7280}
+.rp-badge.down{background:#fef2f2;color:#991b1b}
+.rp-section{margin-bottom:12px}
+.rp-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ccc;margin-bottom:8px}
+.rp-bar-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.rp-bar-lbl{font-size:11px;color:#888;width:48px;flex-shrink:0}
+.rp-bar-track{flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.rp-bar-fill{height:100%;border-radius:3px;background:#0050c8;transition:width .4s}
+.rp-bar-fill.pink{background:#ec4899}
+.rp-bar-val{font-size:11px;font-weight:600;color:#555;width:32px;text-align:right;flex-shrink:0}
+.rp-ch-row{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:#f8f8f8;border-radius:7px;margin-bottom:5px;font-size:11px}
+.rp-ch-name{color:#666;display:flex;align-items:center;gap:5px}
+.rp-ch-val{font-weight:700;color:#111;font-size:12px}
+.funnel-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #f8f8f8;font-size:11px}
+.funnel-row:last-child{border-bottom:none}
+.funnel-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.funnel-name{color:#888;flex:1}
+.funnel-val{font-weight:700;color:#111;font-size:12px}
+.funnel-row.current .funnel-val{color:#0050c8}
+.rp-save{margin-top:auto;padding-top:12px;border-top:1px solid #f0f0f0}
+.rp-name-inp{height:34px;border:1px solid #e0e0e0;border-radius:7px;padding:0 10px;font-size:12px;width:100%;outline:none;background:#fff;color:#1a1a1a;margin-bottom:7px;font-family:inherit;transition:border-color .15s}
+.rp-name-inp:focus{border-color:#0050c8}
+.rp-save-btn{width:100%;height:38px;background:#0050c8;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s}
+.rp-save-btn:hover{background:#0040a8}
+.rp-save-btn:disabled{background:#c0cfe8;cursor:not-allowed}
+
+/* ── ANCHOR NAV ── */
+.anav-item{padding:12px 12px;font-size:11px;font-weight:600;color:#bbb;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s}
+.anav-item:hover{color:#555}
+.anav-item.active{color:#0050c8;border-bottom-color:#0050c8}
+.anav-item.done{color:#065f46}
+.anav-sep{font-size:11px;color:#e0e0e0;padding:0 2px;margin-bottom:2px}
+
+/* ── FORM SECTIONS ── */
+.form-section{background:#fff;border:1px solid #ebebeb;border-radius:12px;overflow:hidden;margin-bottom:12px;transition:box-shadow .15s}
+.form-section:focus-within{box-shadow:0 0 0 2px rgba(0,80,200,.1);border-color:#c0cfe8}
+.fsec-header{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;background:#fff}
+.fsec-header:hover{background:#fafafa}
+.fsec-num{width:20px;height:20px;border-radius:50%;background:#0050c8;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fsec-num.done{background:#22c55e}
+.fsec-title{font-size:13px;font-weight:700;color:#111}
+.fsec-badge{flex:1;margin-left:4px}
+.fsec-badge span{font-size:11px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsec-toggle{font-size:14px;color:#bbb;transition:transform .2s;flex-shrink:0}
+.fsec-toggle.collapsed{transform:rotate(180deg)}
+.fsec-body{padding:0 16px 16px;border-top:1px solid #f5f5f5}
+.fsec-body.collapsed{display:none}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<div class="topnav">
+  <div class="brand">ADCP<span>.</span></div>
+  <div class="nav-tabs">
+    <div class="nav-tab active" id="tab-camp" onclick="switchTab('camp')"><i class="ti ti-speakerphone"></i> Campaigns</div>
+    <div class="nav-tab" id="tab-aud" onclick="switchTab('aud')"><i class="ti ti-users"></i> Audiences</div>
+  </div>
+  <div class="nav-right">
+    <div class="step-counter" id="stepCounter">Start</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     CAMPAIGN VIEW
+════════════════════════════════ -->
+<div class="view active" id="camp-view">
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-steps" id="progressSteps"></div>
+    <div class="pbar-line"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+  </div>
+  <div class="camp-main">
+
+  <!-- STEP 0: PROMPT -->
+  <div class="screen active" id="screen-0">
+    <div class="prompt-screen">
+      <div class="prompt-logo">ADCP.</div>
+      <div class="prompt-headline">Describe your campaign. AI builds the plan.</div>
+      <div class="prompt-box-wrap">
+        <textarea class="prompt-box" id="promptInput" placeholder="e.g. Retargeting for Hiveclothing — users who saw our summer collection, ₹8L budget, 30 days, heavier on CTV and DOOH, Mumbai and Delhi only…" rows="3"></textarea>
+        <button class="prompt-submit" onclick="submitPrompt()"><i class="ti ti-arrow-up"></i></button>
+      </div>
+      <div class="prompt-hints">
+        <div class="prompt-hint" onclick="fillHint(0)">Retargeting past campaign</div>
+        <div class="prompt-hint" onclick="fillHint(1)">Brand awareness — all channels</div>
+        <div class="prompt-hint" onclick="fillHint(2)">CTV + DOOH, metro cities</div>
+        <div class="prompt-hint" onclick="fillHint(3)">Performance, mobile-first</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: AUDIENCE + CAMPAIGN SETUP -->
+  <div class="screen" id="screen-1">
+    <div class="screen-tag">Step 1 · Campaign & Audience</div>
+    <div class="screen-title">Campaign setup</div>
+    <div class="screen-sub">Name your campaign, set your objective and KPI, then pick an audience</div>
+    <div class="gen-bar" id="gen1"><div class="gen-spin"></div><div class="gen-txt">AI is reading your prompt and pre-filling the plan…</div></div>
+
+    <!-- campaign name + brand -->
+    <div class="fg2">
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Campaign name</span>
+          <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">A unique identifier for this campaign. Used in reports, MAID exports, and audience naming. AI suggests based on brand + objective + dates.</div></div>
+          <div class="spark-btn" onclick="spark('campname','Hiveclothing_SS26_Retargeting_Jun2026 — brand, collection, type, and month. Makes filtering in reports easy.')"><i class="ti ti-sparkles"></i></div>
+        </div>
+        <input class="editable-field" value="Hiveclothing_SS26_Retargeting_Jun26"/>
+        <div class="ai-suggestion" id="sug-campname"></div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Brand / Advertiser</span>
+          <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">The brand this campaign is running for. Used for audience matching and reporting segmentation.</div></div>
+        </div>
+        <input class="editable-field" value="Hiveclothing"/>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="section-label" style="display:flex;align-items:center;gap:8px">
+      Campaign objective & KPI
+      <div class="spark-btn" onclick="spark('kpi','For a retargeting campaign with a warm audience, Brand Recall is the strongest KPI — you already have awareness, you\'re reinforcing it. Website Traffic works well if you have a sale or launch happening.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-kpi" style="margin-bottom:10px"></div>
+    <div class="kpi-grid" style="margin-bottom:18px">
+      <div class="kpi-card sel" id="kpi-recall" onclick="selKpi('recall')">
+        <div class="kpi-card-label">Brand recall</div>
+        <div class="kpi-card-sub">Max impressions & frequency across channels</div>
+      </div>
+      <div class="kpi-card" id="kpi-traffic" onclick="selKpi('traffic')">
+        <div class="kpi-card-label">Website traffic</div>
+        <div class="kpi-card-sub">Drive clicks and site visits</div>
+      </div>
+      <div class="kpi-card" id="kpi-reach" onclick="selKpi('reach')">
+        <div class="kpi-card-label">Unique reach</div>
+        <div class="kpi-card-sub">Maximise distinct device coverage</div>
+      </div>
+      <div class="kpi-card" id="kpi-video" onclick="selKpi('video')">
+        <div class="kpi-card-label">Video views</div>
+        <div class="kpi-card-sub">CTV / DOOH completion rate focus</div>
+      </div>
+      <div class="kpi-card" id="kpi-conv" onclick="selKpi('conv')">
+        <div class="kpi-card-label">Conversions</div>
+        <div class="kpi-card-sub">Optimise toward purchase or sign-up</div>
+      </div>
+      <div class="kpi-card" id="kpi-awareness" onclick="selKpi('awareness')">
+        <div class="kpi-card-label">Awareness</div>
+        <div class="kpi-card-sub">New audience, upper funnel</div>
+      </div>
+    </div>
+
+    <!-- audience picker -->
+    <div class="section-label" style="display:flex;align-items:center;gap:8px">
+      Select audience
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Audiences are built and saved in the Audience module. Select one here to use its MAID list, demographic filters, and segment definition.</div></div>
+      <div class="spark-btn" onclick="spark('aud-pick','Based on your prompt, Hiveclothing_Summer_Retargeting is the strongest match — 4.21L MAIDs, 91% match, female-skew fashion intenders in Mumbai + Delhi.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-aud-pick" style="margin-bottom:10px"></div>
+
+    <!-- selected audience preview (shown after selection) -->
+    <div class="selected-aud-preview" id="selAudPreview">
+      <div class="sap-header">
+        <div class="sap-name" id="sapName">—</div>
+        <div class="sap-change" onclick="clearAudSelection()">Change audience</div>
+      </div>
+      <div class="sap-tags" id="sapTags"></div>
+      <div class="sap-stats">
+        <div class="sap-stat"><strong id="sapMAIDs">—</strong> MAIDs</div>
+        <div class="sap-stat"><strong id="sapMatch">—</strong> match rate</div>
+        <div class="sap-stat"><strong id="sapChannels">—</strong> channels reachable</div>
+      </div>
+    </div>
+
+    <div id="audPickerCards">
+      <div class="aud-pick-grid">
+        <div class="aud-pick-card" id="ap-1" onclick="pickAud('ap-1','Hiveclothing_Summer_Retargeting','4.21L MAIDs · Mumbai + Delhi · Fashion intenders',['Female-skew 60%','Age 22–38','Mobile-first'],'4.21L','91%','4')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Hiveclothing_Summer_Retargeting</div>
+          <div class="aud-pick-sub">4.21L MAIDs · Mumbai + Delhi · Fashion intenders</div>
+          <div class="aud-pick-tags"><span class="tag blue">Female-skew 60%</span><span class="tag blue">Age 22–38</span><span class="tag blue">Mobile-first</span></div>
+          <div class="aud-pick-meta">Updated 3 days ago · 91% match rate</div>
+        </div>
+        <div class="aud-pick-card" id="ap-2" onclick="pickAud('ap-2','Hiveclothing_Loyalty_Base','82K MAIDs · Pan-India · Existing customers',['All genders','Age 25–45','High LTV'],'82K','88%','4')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Hiveclothing_Loyalty_Base</div>
+          <div class="aud-pick-sub">82K MAIDs · Pan-India · Existing customers</div>
+          <div class="aud-pick-tags"><span class="tag blue">All genders</span><span class="tag blue">Age 25–45</span><span class="tag blue">High LTV</span></div>
+          <div class="aud-pick-meta">Updated 8 days ago · 88% match rate</div>
+        </div>
+        <div class="aud-pick-card" id="ap-3" onclick="pickAud('ap-3','Fashion_Intenders_Broad','18.4L MAIDs · Top 6 metros · Category-level',['Mixed gender','Age 18–40','Broad reach'],'18.4L','84%','4')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Fashion_Intenders_Broad</div>
+          <div class="aud-pick-sub">18.4L MAIDs · Top 6 metros · Category-level</div>
+          <div class="aud-pick-tags"><span class="tag blue">Mixed gender</span><span class="tag blue">Age 18–40</span><span class="tag blue">Broad reach</span></div>
+          <div class="aud-pick-meta">Updated 12 days ago · 84% match rate</div>
+        </div>
+        <div class="new-aud-card" onclick="switchTab('aud');startAudBuilder()">
+          <i class="ti ti-plus" style="font-size:18px"></i>
+          <span>Create new audience</span>
+          <span style="font-size:11px;color:#aaa;font-weight:400">Opens Audience module</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(0)">← Back to prompt</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Set reach & budget <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 2: REACH + BUDGET -->
+  <div class="screen" id="screen-2">
+    <div class="screen-tag">Step 2 · Reach & Budget</div>
+    <div class="screen-title">Reach, budget + channels</div>
+    <div class="screen-sub">Toggle channels on or off — budget auto-rebalances across active channels</div>
+
+    <div class="fg2" style="margin-bottom:16px">
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Total budget (₹)</span>
+          <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Total rupee spend for this campaign. Distributed across active channels. Removing a channel redistributes its budget proportionally.</div></div>
+          <div class="spark-btn" onclick="spark('totbud','For 30-day retargeting at this audience size, ₹8–10L is optimal. Below ₹5L, frequency drops too low for meaningful brand recall.')"><i class="ti ti-sparkles"></i></div>
+        </div>
+        <input class="editable-field" value="₹8,00,000"/>
+        <div class="ai-suggestion" id="sug-totbud"></div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Flight dates</span>
+          <div class="spark-btn" onclick="spark('dates','30-day flight is optimal for this budget — 4–6 exposures per user before diminishing returns. Start 01 Jun gives 3 days for creative trafficking.')"><i class="ti ti-sparkles"></i></div>
+        </div>
+        <div class="field-box filled" style="gap:8px"><span>01 Jun 2026</span><span style="color:#bbb">→</span><span>30 Jun 2026</span></div>
+        <div class="ai-suggestion" id="sug-dates"></div>
+      </div>
+    </div>
+
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span>Channel allocation — reach + budget</span>
+      <div class="spark-btn" onclick="spark('alloc','CTV+DOOH brief: CTV 30% · DOOH 30% · Mobile 25% · Web 15%. Weighted to your brief while keeping mobile strong for MAID retargeting.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-alloc" style="margin-bottom:10px"></div>
+    <div class="rebalance-note"><i class="ti ti-info-circle" style="font-size:14px;color:#0050c8;flex-shrink:0"></i>Toggle a channel off to remove it — its budget redistributes to unlocked active channels. Lock a row to protect its value.</div>
+
+    <div class="ch-table">
+      <div class="ch-row hdr"><span></span><span>Channel</span><span>Est. reach / mo</span><span>Budget (₹)</span><span>% total</span><span>Lock</span><span></span></div>
+      <div class="ch-row" id="chrow-web">
+        <div class="ch-toggle on" id="chtog-web" onclick="toggleCh('web')"></div>
+        <span style="font-size:13px;font-weight:600">Web</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">18.2L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:82%"></div></div></div>
+        <input class="budget-input" id="b-web" value="1,20,000"/>
+        <input class="budget-input" id="p-web" value="15%"/>
+        <div class="lock-btn" id="lock-web" onclick="toggleLock('web')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bweb','Web at 15% is lean but appropriate given your CTV+DOOH focus — broad reach safety net without cannibalising premium channels.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="ch-row" id="chrow-mobile">
+        <div class="ch-toggle on" id="chtog-mobile" onclick="toggleCh('mobile')"></div>
+        <span style="font-size:13px;font-weight:600">Mobile / App</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">12.6L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:60%"></div></div></div>
+        <input class="budget-input" id="b-mobile" value="2,00,000"/>
+        <input class="budget-input" id="p-mobile" value="25%"/>
+        <div class="lock-btn" id="lock-mobile" onclick="toggleLock('mobile')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bmobile','Mobile at 25% is strong — your audience is mobile-first and MAID match rate is highest here. Lowest CPM in your mix.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="ch-row" id="chrow-dooh">
+        <div class="ch-toggle on" id="chtog-dooh" onclick="toggleCh('dooh')"></div>
+        <span style="font-size:13px;font-weight:600">DOOH</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">5.8L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:28%"></div></div></div>
+        <input class="budget-input" id="b-dooh" value="2,40,000"/>
+        <input class="budget-input" id="p-dooh" value="30%"/>
+        <div class="lock-btn" id="lock-dooh" onclick="toggleLock('dooh')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bdooh','DOOH at 30% matches your brief. Mumbai + Delhi premium mall and metro screens have strongest overlap with your audience. Proof-of-play included.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="ch-row" id="chrow-ctv">
+        <div class="ch-toggle on" id="chtog-ctv" onclick="toggleCh('ctv')"></div>
+        <span style="font-size:13px;font-weight:600">CTV</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">1.8L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:10%"></div></div></div>
+        <input class="budget-input" id="b-ctv" value="2,40,000"/>
+        <input class="budget-input" id="p-ctv" value="30%"/>
+        <div class="lock-btn" id="lock-ctv" onclick="toggleLock('ctv')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bctv','CTV at 30% delivers high-impact pre-roll to your retargeting audience on JioCinema and Hotstar. Highest CPM but strongest brand recall signal.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+    </div>
+    <div class="budget-total-row"><span style="font-size:12px;color:#666">Channel total</span><span class="btotal-ok">₹8,00,000 · matches total ✓</span></div>
+
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Upload creatives <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 3: CREATIVES -->
+  <div class="screen" id="screen-3">
+    <div class="screen-tag">Step 3 · Creatives</div>
+    <div class="screen-title">Upload creatives + publisher targeting</div>
+    <div class="screen-sub">Active channels only — upload formats and configure publisher include/exclude rules</div>
+
+    <div class="channel-grid">
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>Web<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cweb','For fashion intenders: include Mint, ET Style, Vogue India, Femina. Exclude TOI run-of-site — too broad. Target finance + lifestyle sections.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">300×250 · 728×90 · 160×600</div>
+        <div class="upload-zone" style="margin-bottom:8px"><div class="upload-zone-label">2 creatives uploaded</div><div><span class="tag green">Banner_A.jpg</span><span class="tag green">Banner_B.jpg</span></div></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">Publisher targeting</div>
+        <div class="pub-target">
+          <div class="pub-toggle"><button class="pub-toggle-btn active-inc">Allowlist</button><button class="pub-toggle-btn">Blocklist</button></div>
+          <div class="pub-target-row"><input class="pub-input" placeholder="mint.com, vogue.in…"/><button class="pub-add-btn">+ Add</button></div>
+          <div class="pub-tags"><div class="pub-tag-item">mint.com<span class="pub-tag-x"> ✕</span></div><div class="pub-tag-item">vogue.in<span class="pub-tag-x"> ✕</span></div></div>
+        </div>
+      </div>
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>Mobile / App<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cmob','Include Myntra, Nykaa, Ajio. Exclude gaming apps. Target users who recently browsed fashion/apparel.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">320×50 · 300×250 · interstitial</div>
+        <div class="upload-zone" style="margin-bottom:8px"><div class="upload-zone-label">2 creatives uploaded</div><div><span class="tag green">App_300.jpg</span><span class="tag green">Interstitial.jpg</span></div></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">App targeting</div>
+        <div class="pub-target">
+          <div class="pub-toggle"><button class="pub-toggle-btn active-inc">Allowlist</button><button class="pub-toggle-btn">Blocklist</button></div>
+          <div class="pub-target-row"><input class="pub-input" placeholder="com.myntra…"/><button class="pub-add-btn">+ Add</button></div>
+          <div class="pub-tags"><div class="pub-tag-item">com.myntra<span class="pub-tag-x"> ✕</span></div><div class="pub-tag-item">com.nykaa<span class="pub-tag-x"> ✕</span></div></div>
+        </div>
+      </div>
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>DOOH<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cdooh','Based on pincodes: Premium malls (Palladium, Select Citywalk) and metro stations (Andheri, CP). Exclude highway — wrong audience for fashion.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">1920×1080 · 16:9 full-motion</div>
+        <div class="upload-zone" style="margin-bottom:8px"><div class="upload-zone-label">1 creative uploaded</div><div><span class="tag green">OOH_Summer.mp4</span></div></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">Zone + screen type</div>
+        <div class="pub-target">
+          <div class="pub-tags" style="margin-bottom:8px"><div class="pub-tag-item">Premium malls<span class="pub-tag-x"> ✕</span></div><div class="pub-tag-item">Metro stations<span class="pub-tag-x"> ✕</span></div><div class="pub-tag-item excl">Highway ✕</div></div>
+          <div class="pub-target-row"><input class="pub-input" placeholder="Zone or screen type…"/><button class="pub-add-btn">+ Add</button></div>
+        </div>
+      </div>
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>CTV<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cctv','JioCinema and Hotstar have highest overlap with your audience. Target lifestyle and drama. Avoid cricket — male skew.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">VAST 4.0 · 15s / 30s pre-roll</div>
+        <div class="upload-zone" style="margin-bottom:8px"><div class="upload-zone-label">VAST URL pasted</div><div><span class="tag green">VAST URL ✓</span></div></div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:6px">Platform + genre</div>
+        <div class="pub-target">
+          <div class="pub-tags" style="margin-bottom:8px"><div class="pub-tag-item">JioCinema<span class="pub-tag-x"> ✕</span></div><div class="pub-tag-item">Hotstar<span class="pub-tag-x"> ✕</span></div><div class="pub-tag-item excl">Cricket ✕</div></div>
+          <div class="pub-target-row"><input class="pub-input" placeholder="Platform or genre…"/><button class="pub-add-btn">+ Add</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary btn-lg" onclick="goTo(4)">Submit for approval <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 4: SUBMITTED -->
+  <div class="screen" id="screen-4">
+    <div class="submit-wrap">
+      <div class="submit-icon"><i class="ti ti-circle-check"></i></div>
+      <div class="submit-title">Campaign submitted for approval</div>
+      <div class="submit-sub">Your campaign has been configured and sent for review.<br>It will go live automatically once approved by your team.</div>
+      <div class="submit-status"><i class="ti ti-clock" style="font-size:14px"></i> Under review · Typically approved within 4–8 hours</div>
+      <div class="submit-summary">
+        <div class="submit-row"><span class="submit-key">Campaign</span><span class="submit-val">Hiveclothing_SS26_Retargeting_Jun26</span></div>
+        <div class="submit-row"><span class="submit-key">Audience</span><span class="submit-val" id="submitAudName">Hiveclothing_Summer_Retargeting · 4.21L MAIDs</span></div>
+        <div class="submit-row"><span class="submit-key">KPI</span><span class="submit-val" id="submitKPI">Brand recall</span></div>
+        <div class="submit-row"><span class="submit-key">Channels</span><span class="submit-val">Web · Mobile · DOOH · CTV</span></div>
+        <div class="submit-row"><span class="submit-key">Total budget</span><span class="submit-val">₹8,00,000</span></div>
+        <div class="submit-row"><span class="submit-key">Flight</span><span class="submit-val">01 Jun – 30 Jun 2026 · 30 days</span></div>
+        <div class="submit-row"><span class="submit-key">Creatives</span><span class="submit-val">6 assets across 4 channels</span></div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn" onclick="goTo(0)"><i class="ti ti-plus"></i> New campaign</button>
+        <button class="btn btn-primary" onclick="switchTab('aud')"><i class="ti ti-users"></i> Manage audiences</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /camp-main -->
+</div><!-- /camp-view -->
+
+<!-- ════════════════════════════════
+     AUDIENCE VIEW
+════════════════════════════════ -->
+<div class="view" id="aud-view">
+<div class="aud-view-inner">
+
+  <!-- AUDIENCE LIST / ENTRY -->
+  <div class="aud-entry" id="audEntry">
+    <div class="aud-entry-inner">
+      <div class="aud-entry-top">
+        <div>
+          <div class="aud-entry-title">Audiences</div>
+          <div class="aud-entry-sub">Saved audiences reusable across any campaign</div>
+        </div>
+        <button class="btn btn-primary" onclick="startAudBuilder()"><i class="ti ti-plus"></i> New audience</button>
+      </div>
+      <div class="saved-aud-grid">
+        <div class="saved-card">
+          <div class="saved-card-name">Hiveclothing_Summer_Retargeting</div>
+          <div class="saved-card-sub">4.21L MAIDs · Mumbai + Delhi · Fashion intenders</div>
+          <div class="saved-card-tags"><span class="tag blue">Female-skew 60%</span><span class="tag blue">Age 22–38</span><span class="tag blue">91% match</span></div>
+          <div class="saved-card-meta"><i class="ti ti-clock" style="font-size:10px"></i> Updated 3 days ago</div>
+        </div>
+        <div class="saved-card">
+          <div class="saved-card-name">Hiveclothing_Loyalty_Base</div>
+          <div class="saved-card-sub">82K MAIDs · Pan-India · Existing customers</div>
+          <div class="saved-card-tags"><span class="tag blue">All genders</span><span class="tag blue">Age 25–45</span><span class="tag blue">88% match</span></div>
+          <div class="saved-card-meta"><i class="ti ti-clock" style="font-size:10px"></i> Updated 8 days ago</div>
+        </div>
+        <div class="saved-card">
+          <div class="saved-card-name">Fashion_Intenders_Broad</div>
+          <div class="saved-card-sub">18.4L MAIDs · Top 6 metros · Category-level</div>
+          <div class="saved-card-tags"><span class="tag blue">Mixed gender</span><span class="tag blue">Age 18–40</span><span class="tag blue">84% match</span></div>
+          <div class="saved-card-meta"><i class="ti ti-clock" style="font-size:10px"></i> Updated 12 days ago</div>
+        </div>
+        <div class="new-saved-card" onclick="startAudBuilder()">
+          <i class="ti ti-plus" style="font-size:20px"></i>
+          <span>New audience</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIENCE BUILDER -->
+  <div class="aud-builder" id="audBuilder">
+    <div class="aud-builder-left">
+
+      <!-- builder header -->
+      <div id="audBuilderHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#111" id="audBuilderTitle">Build your audience</div>
+          <div style="font-size:13px;color:#888;margin-top:2px" id="audBuilderSub">Choose a data source to get started</div>
+        </div>
+        <button class="btn btn-sm" onclick="showPathChooser()"><i class="ti ti-arrow-left"></i> Change source</button>
+      </div>
+
+      <!-- PATH CHOOSER -->
+      <div id="audPathChooser">
+        <div style="font-size:18px;font-weight:700;color:#111;margin-bottom:4px">Build your audience</div>
+        <div style="font-size:13px;color:#888;margin-bottom:24px;line-height:1.5">Choose your data source. Both paths end with the same saved audience format.</div>
+        <div class="path-cards">
+          <div class="path-card" onclick="startAudFlow('fp')">
+            <div class="path-card-badge blue"><i class="ti ti-upload" style="font-size:10px"></i> First-party data</div>
+            <div class="path-card-icon blue"><i class="ti ti-files"></i></div>
+            <div class="path-card-title">Upload your own data</div>
+            <div class="path-card-desc">You have a list — MAIDs, lat-longs, or pincodes. Platform resolves it and shows what it found.</div>
+            <div class="path-card-steps">
+              <div class="pc-step"><i class="ti ti-circle-dot"></i>Upload MAIDs / lat-longs / pincodes</div>
+              <div class="pc-step"><i class="ti ti-circle-dot"></i>Platform infers demographic profile</div>
+              <div class="pc-step"><i class="ti ti-circle-dot"></i>Refine with filters to narrow</div>
+            </div>
+            <div class="path-card-arrow"><i class="ti ti-arrow-right"></i></div>
+          </div>
+          <div class="path-card" onclick="startAudFlow('plat')">
+            <div class="path-card-badge teal"><i class="ti ti-database" style="font-size:10px"></i> Platform data</div>
+            <div class="path-card-icon teal"><i class="ti ti-world"></i></div>
+            <div class="path-card-title">Build from ADCP's graph</div>
+            <div class="path-card-desc">No list needed. Define your audience from geography, demographics, device and interests.</div>
+            <div class="path-card-steps">
+              <div class="pc-step"><i class="ti ti-circle-dot"></i>Set geography</div>
+              <div class="pc-step"><i class="ti ti-circle-dot"></i>Layer demographic filters</div>
+              <div class="pc-step"><i class="ti ti-circle-dot"></i>Add device + interest signals</div>
+            </div>
+            <div class="path-card-arrow"><i class="ti ti-arrow-right"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTINUOUS SCROLL FORM -->
+      <div id="audScrollForm" style="display:none">
+        <div id="audAnchorNav" style="position:sticky;top:52px;z-index:100;background:#fff;border-bottom:1px solid #f0f0f0;margin:0 -28px 24px;padding:0 28px;display:flex;align-items:center;gap:0;overflow-x:auto">
+          <div class="anav-item active" id="anav-source" onclick="scrollToSec('sec-source')">Data source</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-geo" onclick="scrollToSec('sec-geo')">Geography</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-demo" onclick="scrollToSec('sec-demo')">Demographics</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-device" onclick="scrollToSec('sec-device')">Device</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-interests" onclick="scrollToSec('sec-interests')">Interests</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-exclusions" onclick="scrollToSec('sec-exclusions')">Exclusions</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-name" onclick="scrollToSec('sec-name')">Name & save</div>
+        </div>
+
+        <div id="fpResolvedCard" style="display:none;margin-bottom:20px">
+          <div class="inferred-card">
+            <div class="inf-header"><div class="inf-icon"><i class="ti ti-sparkles" style="font-size:13px"></i></div><div><div class="inf-title">4,21,800 MAIDs matched · 91% match rate</div><div class="inf-sub">Inferred from device signals, app usage and location data</div></div></div>
+            <div class="inf-tags"><span class="inf-tag">Female-skew · 30%F / 70%M</span><span class="inf-tag">Age 22–38 peak</span><span class="inf-tag">Mumbai + Delhi</span><span class="inf-tag">Mobile-first</span><span class="inf-tag">Mid-premium income</span><span class="inf-tag">Fashion + lifestyle apps active</span></div>
+            <div class="inf-note">Base pool: 4.21L devices. Scroll down to apply filters and narrow your audience.</div>
+          </div>
+        </div>
+
+        <!-- SOURCE -->
+        <div class="form-section" id="sec-source">
+          <div class="fsec-header"><div class="fsec-num done" id="fnum-source"><i class="ti ti-check" style="font-size:10px"></i></div><div class="fsec-title">Data source</div><div class="fsec-badge" id="fbadge-source"></div><div class="fsec-toggle" onclick="toggleSec('source')"><i class="ti ti-chevron-up" id="ftog-source"></i></div></div>
+          <div class="fsec-body" id="fbody-source">
+            <div id="fp-source-body">
+              <div class="aud-field-mb">
+                <div class="aud-flabel">MAIDs <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Mobile Advertising IDs. Upload a .csv with one MAID per row.</div></div></div>
+                <div id="maid-done" style="display:none" class="aud-upload-done"><i class="ti ti-circle-check"></i><span>4,21,800 MAIDs loaded</span><span style="margin-left:auto;font-size:11px;color:#999;cursor:pointer" onclick="resetAudUp('maid')">Remove</span></div>
+                <div id="maid-zone" class="aud-upload-zone" onclick="fakeAudUp('maid','4,21,800 MAIDs loaded')"><div class="aud-upload-icon"><i class="ti ti-file-upload"></i></div><div class="aud-upload-label"><strong>Click to upload</strong> or drop .csv · One MAID per row</div></div>
+              </div>
+              <div class="aud-field-mb">
+                <div class="aud-flabel">Lat-longs <div class="spark-btn" onclick="spark('aud-ll','BKC, Bandra West, South Mumbai, Connaught Place, Saket — premium footfall zones for fashion audiences.')"><i class="ti ti-sparkles"></i></div></div>
+                <div id="ll-done" style="display:none" class="aud-upload-done"><i class="ti ti-circle-check"></i><span>3 zones loaded</span><span style="margin-left:auto;font-size:11px;color:#999;cursor:pointer" onclick="resetAudUp('ll')">Remove</span></div>
+                <div id="ll-zone" class="aud-upload-zone" onclick="fakeAudUp('ll','3 zones loaded')"><div class="aud-upload-icon"><i class="ti ti-map-pin"></i></div><div class="aud-upload-label"><strong>Click to upload</strong> coordinates · Platform resolves audience from location signals</div></div>
+                <div class="ai-suggestion" id="sug-aud-ll"></div>
+              </div>
+              <div class="aud-field-mb">
+                <div class="aud-flabel">Or import from past campaign <div class="spark-btn" onclick="spark('aud-pc','Hiveclothing_SS26_Discovery_Apr26 — most recent, 4.21L MAIDs, 91% match.')"><i class="ti ti-sparkles"></i></div></div>
+                <select class="aud-input" onchange="if(this.value){document.getElementById('fpResolvedCard').style.display='block';animRp('4.21L');document.getElementById('rpLbl').textContent='MAIDs matched · 91% match rate';document.getElementById('rpGenderBreak').style.display='block';document.getElementById('rpChBreak').style.display='block';}"><option value="">Select campaign…</option><option>Hiveclothing_SS26_Discovery_Apr26 — 4.21L MAIDs</option><option>Hiveclothing_Loyalty_Base_Mar26 — 82K MAIDs</option></select>
+                <div class="ai-suggestion" id="sug-aud-pc"></div>
+              </div>
+            </div>
+            <div id="plat-source-body" style="display:none">
+              <div style="background:#f5f8ff;border:1px solid #c0cfe8;border-radius:9px;padding:14px 16px;"><div style="font-size:12px;font-weight:700;color:#0050c8;margin-bottom:4px;display:flex;align-items:center;gap:5px"><i class="ti ti-database" style="font-size:13px"></i> Building from ADCP platform graph</div><div style="font-size:11px;color:#6a8fc8;line-height:1.5">420M+ device profiles across web, app, CTV and DOOH. Define your audience by geography and filters below — no upload needed.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GEOGRAPHY -->
+        <div class="form-section" id="sec-geo">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-geo">2</div><div class="fsec-title">Geography</div><div class="fsec-badge"><span id="geo-summary">Mumbai + Delhi</span></div><div class="fsec-toggle" onclick="toggleSec('geo')"><i class="ti ti-chevron-up" id="ftog-geo"></i></div></div>
+          <div class="fsec-body" id="fbody-geo">
+            <div id="fp-geo-note" style="font-size:12px;color:#888;padding-bottom:10px">Geography inferred from your uploaded lat-longs and pincodes. Add cities to expand coverage.</div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">City or pincode <div class="spark-btn" onclick="spark('aud-geo','For fashion: Mumbai and Delhi primary. Bangalore + Pune add volume with similar demographic profile.')"><i class="ti ti-sparkles"></i></div></div>
+              <div style="position:relative"><input class="aud-input" placeholder="Search city or pincode…"/><i class="ti ti-search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#bbb;font-size:12px;pointer-events:none"></i></div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px" id="geoTagsScroll">
+                <div class="geo-tag">Mumbai <span class="geo-tag-x" onclick="this.parentElement.remove()">✕</span></div>
+                <div class="geo-tag">Delhi NCR <span class="geo-tag-x" onclick="this.parentElement.remove()">✕</span></div>
+              </div>
+              <div class="quick-geos"><div class="quick-geo" onclick="addQuickGeo(this,'Bangalore')">+ Bangalore</div><div class="quick-geo" onclick="addQuickGeo(this,'Pune')">+ Pune</div><div class="quick-geo" onclick="addQuickGeo(this,'Hyderabad')">+ Hyderabad</div><div class="quick-geo" onclick="addQuickGeo(this,'Chennai')">+ Chennai</div><div class="quick-geo" onclick="addQuickGeo(this,'Kolkata')">+ Kolkata</div></div>
+              <div class="ai-suggestion" id="sug-aud-geo"></div>
+            </div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">City tier</div>
+              <div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Tier 1 metros</div><div class="chip" onclick="this.classList.toggle('sel')">Tier 2</div><div class="chip" onclick="this.classList.toggle('sel')">Tier 3</div><div class="chip" onclick="this.classList.toggle('sel')">Pan India</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEMOGRAPHICS -->
+        <div class="form-section" id="sec-demo">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-demo">3</div><div class="fsec-title">Demographics</div><div class="fsec-badge"><span id="demo-summary">All genders · 22–45 · Mid + Premium</span></div><div class="fsec-toggle" onclick="toggleSec('demo')"><i class="ti ti-chevron-up" id="ftog-demo"></i></div></div>
+          <div class="fsec-body" id="fbody-demo">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Gender <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Inferred from device signals and app usage patterns.</div></div></div>
+              <div class="gender-grid">
+                <div class="gender-card sel" id="gc-all" onclick="selGender('all')"><div class="gender-icon">⚥</div><div class="gender-lbl">All</div><div class="gender-cnt">4.21L</div></div>
+                <div class="gender-card" id="gc-female" onclick="selGender('female')"><div class="gender-icon">♀</div><div class="gender-lbl">Female</div><div class="gender-cnt">30% · 1.26L</div></div>
+                <div class="gender-card" id="gc-male" onclick="selGender('male')"><div class="gender-icon">♂</div><div class="gender-lbl">Male</div><div class="gender-cnt">70% · 2.95L</div></div>
+              </div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Age bracket <div class="spark-btn" onclick="spark('aud-age','22–35 is highest-value for fashion retargeting. 36–45 adds volume. 18–21 has lower conversion rate.')"><i class="ti ti-sparkles"></i></div></div>
+              <div class="chip-row"><div class="chip" onclick="this.classList.toggle('sel');updateDemoReach()">18–21</div><div class="chip sel" onclick="this.classList.toggle('sel');updateDemoReach()">22–35</div><div class="chip sel" onclick="this.classList.toggle('sel');updateDemoReach()">36–45</div><div class="chip" onclick="this.classList.toggle('sel');updateDemoReach()">46–55</div><div class="chip" onclick="this.classList.toggle('sel');updateDemoReach()">55+</div></div>
+              <div class="ai-suggestion" id="sug-aud-age"></div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Income tier <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Inferred from device tier, neighbourhood signals and app usage.</div></div></div>
+              <div class="chip-row"><div class="chip" onclick="this.classList.toggle('sel')">Budget</div><div class="chip sel" onclick="this.classList.toggle('sel')">Mid</div><div class="chip sel" onclick="this.classList.toggle('sel')">Premium</div><div class="chip" onclick="this.classList.toggle('sel')">Luxury</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEVICE -->
+        <div class="form-section" id="sec-device">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-device">4</div><div class="fsec-title">Device type</div><div class="fsec-badge"><span>Mobile · Desktop · CTV · Android + iOS · Mid + Flagship</span></div><div class="fsec-toggle" onclick="toggleSec('device')"><i class="ti ti-chevron-up" id="ftog-device"></i></div></div>
+          <div class="fsec-body" id="fbody-device">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Device</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+                <div class="gender-card sel" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-mobile" style="font-size:15px;color:#0050c8;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">Mobile</div><div class="gender-cnt" style="text-align:left">Android + iOS</div></div></div>
+                <div class="gender-card sel" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-laptop" style="font-size:15px;color:#0050c8;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">Desktop</div><div class="gender-cnt" style="text-align:left">Browser-based</div></div></div>
+                <div class="gender-card sel" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-tv" style="font-size:15px;color:#0050c8;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">CTV</div><div class="gender-cnt" style="text-align:left">Smart TV</div></div></div>
+                <div class="gender-card" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-ipad" style="font-size:15px;color:#bbb;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">Tablet</div><div class="gender-cnt" style="text-align:left">iPad, Android</div></div></div>
+              </div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb"><div class="aud-flabel">Mobile OS</div><div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Android</div><div class="chip sel" onclick="this.classList.toggle('sel')">iOS</div></div></div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Device tier <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Flagship = ₹40K+ handsets. Mid-range = ₹15K–40K. Budget = below ₹15K.</div></div></div>
+              <div class="chip-row"><div class="chip" onclick="this.classList.toggle('sel')">Budget</div><div class="chip sel" onclick="this.classList.toggle('sel')">Mid-range</div><div class="chip sel" onclick="this.classList.toggle('sel')">Flagship</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INTERESTS -->
+        <div class="form-section" id="sec-interests">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-interests">5</div><div class="fsec-title">Interests & affinity</div><div class="fsec-badge"><span>Fashion · Beauty · Cart abandoner</span></div><div class="fsec-toggle" onclick="toggleSec('interests')"><i class="ti ti-chevron-up" id="ftog-interests"></i></div></div>
+          <div class="fsec-body" id="fbody-interests">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Interest category <div class="spark-btn" onclick="spark('aud-int','For Hiveclothing: Fashion and Beauty are essential. Shopping intent and Lifestyle have high cross-purchase overlap.')"><i class="ti ti-sparkles"></i></div></div>
+              <div class="int-cats"><div class="int-cat sel" onclick="this.classList.toggle('sel')">Fashion</div><div class="int-cat sel" onclick="this.classList.toggle('sel')">Beauty</div><div class="int-cat" onclick="this.classList.toggle('sel')">Lifestyle</div><div class="int-cat" onclick="this.classList.toggle('sel')">Travel</div><div class="int-cat" onclick="this.classList.toggle('sel')">Finance</div><div class="int-cat" onclick="this.classList.toggle('sel')">Sports</div><div class="int-cat" onclick="this.classList.toggle('sel')">Food & dining</div><div class="int-cat" onclick="this.classList.toggle('sel')">Tech</div><div class="int-cat" onclick="this.classList.toggle('sel')">Parenting</div><div class="int-cat" onclick="this.classList.toggle('sel')">Shopping intent</div><div class="int-cat" onclick="this.classList.toggle('sel')">Fitness</div><div class="int-cat" onclick="this.classList.toggle('sel')">Entertainment</div></div>
+              <div class="ai-suggestion" id="sug-aud-int"></div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Affinity signals <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Based on specific recent behaviours in last 7–30 days. Narrows audience but increases relevance.</div></div></div>
+              <div class="aff-row"><div class="aff-chip sel" onclick="this.classList.toggle('sel');showNarrowedReach()">Fashion app active (7d)</div><div class="aff-chip sel" onclick="this.classList.toggle('sel');showNarrowedReach()">Cart abandoner</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">New season browser</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Sale hunter</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Premium shopper</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Recent purchase (30d)</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Wishlist adder</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXCLUSIONS -->
+        <div class="form-section" id="sec-exclusions">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-exclusions">6</div><div class="fsec-title">Exclusions</div><div class="fsec-badge"><span>Converters · Freq. exposed</span></div><div class="fsec-toggle" onclick="toggleSec('exclusions')"><i class="ti ti-chevron-up" id="ftog-exclusions"></i></div></div>
+          <div class="fsec-body" id="fbody-exclusions">
+            <div class="excl-item" onclick="this.querySelector('.toggle-sw').classList.toggle('on')"><div><div class="excl-label">Recent converters (30 days)</div><div class="excl-sub">Suppress users who purchased in last 30 days</div></div><div class="toggle-sw on"></div></div>
+            <div class="excl-item" onclick="this.querySelector('.toggle-sw').classList.toggle('on')"><div><div class="excl-label">High-frequency exposed (5+ ads)</div><div class="excl-sub">Exclude users with 5+ prior ad exposures</div></div><div class="toggle-sw on"></div></div>
+            <div class="excl-item" onclick="this.querySelector('.toggle-sw').classList.toggle('on')"><div><div class="excl-label">Loyalty / CRM members</div><div class="excl-sub">Exclude existing loyalty programme members</div></div><div class="toggle-sw"></div></div>
+            <div class="excl-item" onclick="this.querySelector('.toggle-sw').classList.toggle('on')"><div><div class="excl-label">Competitor brand engagers</div><div class="excl-sub">Suppress users engaging with competing brands (14d)</div></div><div class="toggle-sw"></div></div>
+          </div>
+        </div>
+
+        <!-- NAME & SAVE -->
+        <div class="form-section" id="sec-name" style="margin-bottom:40px">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-name">7</div><div class="fsec-title">Name & save</div><div class="fsec-badge" id="fbadge-name"></div><div class="fsec-toggle" onclick="toggleSec('name')"><i class="ti ti-chevron-up" id="ftog-name"></i></div></div>
+          <div class="fsec-body" id="fbody-name">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Audience name <div class="spark-btn" onclick="spark('aud-nm','Hiveclothing_SS26_Female_22to45_Fashion_Retargeting — captures brand, segment, gender, age, category and type.')"><i class="ti ti-sparkles"></i></div></div>
+              <input class="aud-input" id="audFinalName" value="Hiveclothing_SS26_Female_Retargeting" oninput="document.getElementById('rpNameInp').value=this.value"/>
+              <div class="ai-suggestion" id="sug-aud-nm"></div>
+            </div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Type label</div>
+              <div class="chip-row"><div class="chip sel" onclick="selectAudLabel(this)">Retargeting</div><div class="chip" onclick="selectAudLabel(this)">Prospecting</div><div class="chip" onclick="selectAudLabel(this)">Lookalike</div></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;height:42px;justify-content:center;font-size:13px;border-radius:9px;margin-top:4px" onclick="saveAndReturn()"><i class="ti ti-check"></i> Save audience</button>
+          </div>
+        </div>
+
+      </div><!-- /audScrollForm -->
+
+    </div><!-- /aud-builder-left -->
+
+    <!-- REACH PANEL -->
+    <div class="aud-builder-right">
+      <div class="rp-title">Live reach estimate</div>
+      <div class="rp-big">
+        <div class="rp-num" id="rpNum">—</div>
+        <div class="rp-lbl" id="rpLbl">Add filters to see estimate</div>
+        <div class="rp-badge neutral" id="rpBadge">Awaiting filters</div>
+      </div>
+      <div class="rp-section" id="rpFunnel">
+        <div class="rp-section-title">Filter funnel</div>
+        <div id="rpFunnelRows"><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Waiting for data source…</div><div class="funnel-val">—</div></div></div>
+      </div>
+      <div class="rp-section" id="rpGenderBreak" style="display:none">
+        <div class="rp-section-title">Gender split</div>
+        <div class="rp-bar-row"><div class="rp-bar-lbl">Female</div><div class="rp-bar-track"><div class="rp-bar-fill pink" id="rpBFemale" style="width:30%"></div></div><div class="rp-bar-val" id="rpVFemale">30%</div></div>
+        <div class="rp-bar-row"><div class="rp-bar-lbl">Male</div><div class="rp-bar-track"><div class="rp-bar-fill" id="rpBMale" style="width:70%"></div></div><div class="rp-bar-val" id="rpVMale">70%</div></div>
+      </div>
+      <div class="rp-section" id="rpChBreak" style="display:none">
+        <div class="rp-section-title">Channel reachability</div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-device-mobile" style="font-size:11px;color:#0050c8"></i>Mobile</div><div class="rp-ch-val" id="rpChMob">—</div></div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-world" style="font-size:11px;color:#0050c8"></i>Web</div><div class="rp-ch-val" id="rpChWeb">—</div></div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-device-tv" style="font-size:11px;color:#0050c8"></i>CTV</div><div class="rp-ch-val" id="rpChCtv">—</div></div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-screen-share" style="font-size:11px;color:#0050c8"></i>DOOH</div><div class="rp-ch-val" id="rpChDooh">—</div></div>
+      </div>
+      <div class="rp-save">
+        <input class="rp-name-inp" id="rpNameInp" placeholder="Audience name…" value="Hiveclothing_SS26_Female_Retargeting"/>
+        <button class="rp-save-btn" id="rpSaveBtn" onclick="saveAndReturn()" disabled style="opacity:.5;cursor:not-allowed"><i class="ti ti-check"></i> Save audience</button>
+      </div>
+    </div>
+
+  </div><!-- /audBuilder -->
+</div><!-- /aud-view-inner -->
+</div><!-- /aud-view -->
+
+<div id="floater" class="ai-suggestion" style="display:none;position:fixed;bottom:24px;right:24px;max-width:310px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>
+
+<script>
+// ════ STATE ════
+const CAMP_STEPS = ['Prompt','Campaign & Audience','Reach & Budget','Creatives','Submitted'];
+let campStep = 0;
+const locked = {web:false,mobile:false,dooh:false,ctv:false};
+const active = {web:true,mobile:true,dooh:true,ctv:true};
+let selAudId = null;
+let kpiSel = 'recall';
+let audFlow = null;
+let audStepIdx = 0;
+let audGender = 'all';
+const FP_STEPS   = ['upload','profile','demographics','device','interests','exclusions','save'];
+const PLAT_STEPS = ['geography','demographics','device','interests','exclusions','save'];
+const STEP_LABELS = {upload:'Upload data',profile:'Profile',geography:'Geography',demographics:'Demographics',device:'Device',interests:'Interests',exclusions:'Exclusions',save:'Save'};
+
+// ════ TAB ════
+function switchTab(tab){
+  document.getElementById('camp-view').classList.toggle('active', tab==='camp');
+  document.getElementById('aud-view').classList.toggle('active', tab==='aud');
+  document.getElementById('tab-camp').classList.toggle('active', tab==='camp');
+  document.getElementById('tab-aud').classList.toggle('active', tab==='aud');
+  document.getElementById('stepCounter').textContent = tab==='camp' ? (campStep===0?'Start':`Step ${campStep} of ${CAMP_STEPS.length-1}`) : 'Audiences';
+  if(tab==='camp') document.getElementById('progressWrap').style.display = campStep>0 ? 'block' : 'none';
+  else document.getElementById('progressWrap').style.display='none';
+}
+
+// ════ CAMPAIGN FLOW ════
+const HINTS=['Retargeting for Hiveclothing — users who saw our summer collection, ₹8L budget, 30 days, heavier on CTV and DOOH, Mumbai and Delhi only','Brand awareness for a new fintech app — all channels, ₹15L, 45 days, pan-India, mobile-first','Luxury fashion launch — CTV and DOOH only, metro cities, ₹20L, 3 weeks, premium inventory','Performance retargeting — mobile app installs, ₹5L, 2 weeks, tier 1 and tier 2 cities'];
+function fillHint(i){document.getElementById('promptInput').value=HINTS[i];document.getElementById('promptInput').focus();}
+function submitPrompt(){
+  const v=document.getElementById('promptInput').value.trim();
+  if(!v)return;
+  document.getElementById('progressWrap').style.display='block';
+  goTo(1);
+  const g=document.getElementById('gen1');
+  g.classList.add('show');
+  setTimeout(()=>g.classList.remove('show'),1800);
+}
+
+function buildProgress(){
+  const wrap=document.getElementById('progressSteps');
+  wrap.innerHTML='';
+  CAMP_STEPS.forEach((s,i)=>{
+    const item=document.createElement('div');item.className='prog-item';
+    item.innerHTML=`<div class="prog-dot" id="pd-${i}" onclick="goTo(${i})">${i===0?'<i class="ti ti-wand" style="font-size:10px"></i>':i}</div><div class="prog-lbl" id="pl-${i}">${s}</div>`;
+    wrap.appendChild(item);
+    if(i<CAMP_STEPS.length-1){const l=document.createElement('div');l.className='prog-line';l.id=`pl2-${i}`;wrap.appendChild(l);}
+  });
+}
+function updateProgress(){
+  if(campStep>0) document.getElementById('progressWrap').style.display='block';
+  CAMP_STEPS.forEach((_,i)=>{
+    const dot=document.getElementById(`pd-${i}`),lbl=document.getElementById(`pl-${i}`);
+    dot.className='prog-dot';lbl.className='prog-lbl';
+    if(i<campStep){dot.classList.add('done');dot.innerHTML='<i class="ti ti-check" style="font-size:10px"></i>';lbl.classList.add('done');}
+    else if(i===campStep){dot.classList.add('active');dot.innerHTML=i===0?'<i class="ti ti-wand" style="font-size:10px"></i>':i;lbl.classList.add('active');}
+    else dot.innerHTML=i===0?'<i class="ti ti-wand" style="font-size:10px"></i>':i;
+    if(i<CAMP_STEPS.length-1) document.getElementById(`pl2-${i}`).className=i<campStep?'prog-line done':'prog-line';
+  });
+  const pct=campStep===0?0:Math.round((campStep/(CAMP_STEPS.length-1))*100);
+  document.getElementById('pbarFill').style.width=pct+'%';
+  document.getElementById('stepCounter').textContent=campStep===0?'Start':`Step ${campStep} of ${CAMP_STEPS.length-1}`;
+}
+function goTo(n){
+  document.getElementById(`screen-${campStep}`).classList.remove('active');
+  campStep=n;
+  document.getElementById(`screen-${campStep}`).classList.add('active');
+  if(n>0) document.getElementById('progressWrap').style.display='block';
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════ KPI ════
+function selKpi(k){
+  ['recall','traffic','reach','video','conv','awareness'].forEach(x=>document.getElementById('kpi-'+x).classList.toggle('sel',x===k));
+  kpiSel=k;
+  const labels={recall:'Brand recall',traffic:'Website traffic',reach:'Unique reach',video:'Video views',conv:'Conversions',awareness:'Awareness'};
+  document.getElementById('submitKPI').textContent=labels[k]||k;
+}
+
+// ════ AUDIENCE PICKER ════
+function pickAud(id,name,sub,tags,maids,match,channels){
+  document.querySelectorAll('.aud-pick-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById(id).classList.add('sel');
+  selAudId=id;
+  document.getElementById('selAudPreview').style.display='block';
+  document.getElementById('audPickerCards').style.display='none';
+  document.getElementById('sapName').textContent=name;
+  document.getElementById('sapMAIDs').textContent=maids;
+  document.getElementById('sapMatch').textContent=match;
+  document.getElementById('sapChannels').textContent=channels;
+  const tagWrap=document.getElementById('sapTags');
+  tagWrap.innerHTML='';
+  tags.forEach(t=>{const s=document.createElement('span');s.className='tag blue';s.textContent=t;tagWrap.appendChild(s);});
+  document.getElementById('submitAudName').textContent=name+' · '+maids+' MAIDs';
+}
+function clearAudSelection(){
+  selAudId=null;
+  document.getElementById('selAudPreview').style.display='none';
+  document.getElementById('audPickerCards').style.display='block';
+  document.querySelectorAll('.aud-pick-card').forEach(c=>c.classList.remove('sel'));
+}
+
+// ════ CHANNEL TOGGLES ════
+function toggleCh(ch){
+  active[ch]=!active[ch];
+  document.getElementById('chtog-'+ch).className='ch-toggle'+(active[ch]?' on':'');
+  document.getElementById('b-'+ch).disabled=!active[ch];
+  document.getElementById('p-'+ch).disabled=!active[ch];
+}
+function toggleLock(ch){
+  locked[ch]=!locked[ch];
+  const btn=document.getElementById('lock-'+ch);
+  btn.className=locked[ch]?'lock-btn locked':'lock-btn';
+  btn.innerHTML=locked[ch]?'<i class="ti ti-lock"></i>':'<i class="ti ti-lock-open"></i>';
+}
+
+// ════ AUDIENCE MODULE ════
+function startAudBuilder(){
+  document.getElementById('audEntry').style.display='none';
+  document.getElementById('audBuilder').classList.add('show');
+  document.getElementById('audPathChooser').style.display='block';
+  document.getElementById('audScrollForm').style.display='none';
+  document.getElementById('audBuilderHeader').style.display='flex';
+  document.getElementById('audBuilderTitle').textContent='Build your audience';
+  document.getElementById('audBuilderSub').textContent='Choose a data source to get started';
+  resetReach();
+}
+function showPathChooser(){
+  document.getElementById('audPathChooser').style.display='block';
+  document.getElementById('audScrollForm').style.display='none';
+  resetReach();
+}
+function startAudFlow(flow){
+  audFlow=flow;
+  document.getElementById('audPathChooser').style.display='none';
+  document.getElementById('audScrollForm').style.display='block';
+  // Show/hide source-specific content
+  document.getElementById('fp-source-body').style.display=flow==='fp'?'block':'none';
+  document.getElementById('plat-source-body').style.display=flow==='plat'?'block':'none';
+  document.getElementById('fp-geo-note').style.display=flow==='fp'?'block':'none';
+  document.getElementById('fpResolvedCard').style.display='none';
+  // Update builder header
+  document.getElementById('audBuilderTitle').textContent=flow==='fp'?'First-party audience':'Platform audience';
+  document.getElementById('audBuilderSub').textContent=flow==='fp'?'Upload your data then refine with filters below':'Build from ADCP platform data by selecting filters below';
+  if(flow==='plat') showPlatformReach();
+  setRpSaveEnabled(true);
+  window.scrollTo({top:0,behavior:'smooth'});
+  // Set up scroll observer for anchor nav
+  setupScrollObserver();
+}
+function toggleSec(id){
+  const body=document.getElementById('fbody-'+id);
+  const tog=document.getElementById('ftog-'+id);
+  if(!body)return;
+  const collapsed=body.classList.contains('collapsed');
+  body.classList.toggle('collapsed',!collapsed);
+  if(tog) tog.parentElement.classList.toggle('collapsed',!collapsed);
+}
+function scrollToSec(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const offset=el.getBoundingClientRect().top+window.scrollY-110;
+  window.scrollTo({top:offset,behavior:'smooth'});
+}
+function setupScrollObserver(){
+  const sections=['source','geo','demo','device','interests','exclusions','name'];
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id=e.target.id.replace('sec-','');
+        sections.forEach(s=>document.getElementById('anav-'+s)?.classList.remove('active'));
+        document.getElementById('anav-'+id)?.classList.add('active');
+      }
+    });
+  },{rootMargin:'-100px 0px -60% 0px'});
+  sections.forEach(s=>{const el=document.getElementById('sec-'+s);if(el)observer.observe(el);});
+}
+function addQuickGeo(btn,city){
+  const tags=document.getElementById('geoTagsScroll');
+  const d=document.createElement('div');d.className='geo-tag';
+  d.innerHTML=city+' <span class="geo-tag-x" onclick="this.parentElement.remove()">✕</span>';
+  tags.appendChild(d);
+  btn.remove();
+  document.getElementById('geo-summary').textContent='Mumbai + Delhi + '+city;
+  if(audFlow==='plat') showPlatformReach();
+}
+function selGender(g){
+  audGender=g;
+  ['all','female','male'].forEach(x=>document.getElementById('gc-'+x).classList.toggle('sel',x===g));
+  showDemoReach();
+}
+function updateDemoReach(){ showDemoReach(); }
+function selectAudLabel(el){
+  el.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ════ REACH PANEL ════
+function resetReach(){
+  document.getElementById('rpNum').textContent='—';
+  document.getElementById('rpLbl').textContent='Add filters to see estimate';
+  document.getElementById('rpBadge').textContent='Awaiting filters';
+  document.getElementById('rpBadge').className='rp-badge neutral';
+  document.getElementById('rpGenderBreak').style.display='none';
+  document.getElementById('rpChBreak').style.display='none';
+  document.getElementById('rpFunnelRows').innerHTML='<div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Waiting for data source…</div><div class="funnel-val">—</div></div>';
+  setRpSaveEnabled(false);
+}
+function setRpSaveEnabled(on){
+  const btn=document.getElementById('rpSaveBtn');
+  btn.disabled=!on;btn.style.opacity=on?'1':'.5';btn.style.cursor=on?'pointer':'not-allowed';
+}
+function animRp(val){
+  const el=document.getElementById('rpNum');
+  el.style.opacity='0';el.style.transform='translateY(4px)';
+  setTimeout(()=>{el.textContent=val;el.style.opacity='1';el.style.transform='none';el.style.transition='all .25s ease';},100);
+}
+function showPlatformReach(){
+  animRp('5.04L');
+  document.getElementById('rpLbl').textContent='devices in selected geography';
+  document.getElementById('rpBadge').innerHTML='<i class="ti ti-map-pin" style="font-size:10px"></i> Mumbai + Delhi';
+  document.getElementById('rpBadge').className='rp-badge neutral';
+  document.getElementById('rpFunnelRows').innerHTML=`<div class="funnel-row current"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Geography base</div><div class="funnel-val">5.04L</div></div><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Demographics</div><div class="funnel-val">—</div></div>`;
+}
+function showDemoReach(){
+  const num=audGender==='female'?'1.26L':audGender==='male'?'2.95L':'4.21L';
+  animRp(num);
+  document.getElementById('rpLbl').textContent='devices after demographic filters';
+  document.getElementById('rpBadge').innerHTML='<i class="ti ti-arrow-down" style="font-size:10px"></i> narrowed from base';
+  document.getElementById('rpBadge').className='rp-badge down';
+  document.getElementById('rpGenderBreak').style.display='block';
+  document.getElementById('rpChBreak').style.display='block';
+  if(audGender==='female'){document.getElementById('rpBFemale').style.width='100%';document.getElementById('rpVFemale').textContent='100%';document.getElementById('rpBMale').style.width='0%';document.getElementById('rpVMale').textContent='—';}
+  else if(audGender==='male'){document.getElementById('rpBFemale').style.width='0%';document.getElementById('rpVFemale').textContent='—';document.getElementById('rpBMale').style.width='100%';document.getElementById('rpVMale').textContent='100%';}
+  else{document.getElementById('rpBFemale').style.width='30%';document.getElementById('rpVFemale').textContent='30%';document.getElementById('rpBMale').style.width='70%';document.getElementById('rpVMale').textContent='70%';}
+  document.getElementById('rpChMob').textContent=num;
+  document.getElementById('rpChWeb').textContent=audGender==='female'?'1.04L':audGender==='male'?'2.42L':'3.45L';
+  document.getElementById('rpChCtv').textContent=audGender==='female'?'22K':audGender==='male'?'72K':'92K';
+  document.getElementById('rpChDooh').textContent=audGender==='female'?'12K':audGender==='male'?'46K':'58K';
+  document.getElementById('rpFunnelRows').innerHTML=`<div class="funnel-row"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Base pool</div><div class="funnel-val">4.21L</div></div><div class="funnel-row current"><div class="funnel-dot" style="background:#3b82f6"></div><div class="funnel-name">Gender + age + income</div><div class="funnel-val">${num}</div></div><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Device + interests</div><div class="funnel-val">—</div></div>`;
+}
+function showNarrowedReach(){
+  const base=audGender==='female'?126000:audGender==='male'?295000:421800;
+  const narrowed=Math.round(base*0.71);
+  const display=narrowed>=100000?(narrowed/100000).toFixed(1)+'L':Math.round(narrowed/1000)+'K';
+  animRp(display);
+  document.getElementById('rpLbl').textContent='after all filters applied';
+  document.getElementById('rpBadge').innerHTML='<i class="ti ti-arrow-down" style="font-size:10px"></i> '+Math.round((1-narrowed/421800)*100)+'% narrowed from base';
+  document.getElementById('rpBadge').className='rp-badge down';
+  document.getElementById('rpFunnelRows').innerHTML=`<div class="funnel-row"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Base pool</div><div class="funnel-val">4.21L</div></div><div class="funnel-row"><div class="funnel-dot" style="background:#3b82f6"></div><div class="funnel-name">Demographics</div><div class="funnel-val">${audGender==='female'?'1.26L':audGender==='male'?'2.95L':'4.21L'}</div></div><div class="funnel-row current"><div class="funnel-dot" style="background:#22c55e"></div><div class="funnel-name">Device + interests + excl.</div><div class="funnel-val">${display}</div></div>`;
+  setRpSaveEnabled(true);
+  document.getElementById('rpNameInp').value=document.getElementById('audFinalName')?.value||'New Audience';
+}
+
+// ════ UPLOAD (aud module) ════
+function fakeAudUp(type,label){
+  document.getElementById(type+'-zone').style.display='none';
+  const done=document.getElementById(type+'-done');
+  done.querySelector('span').textContent=label;done.style.display='flex';
+  if(audFlow==='fp'){animRp('4.21L');document.getElementById('rpLbl').textContent='MAIDs matched in inventory';document.getElementById('rpBadge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> 91% match rate';document.getElementById('rpBadge').className='rp-badge neutral';document.getElementById('rpFunnelRows').innerHTML='<div class="funnel-row current"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Upload resolved</div><div class="funnel-val">4.21L</div></div><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Demographics</div><div class="funnel-val">—</div></div>';}
+}
+function resetAudUp(type){document.getElementById(type+'-zone').style.display='block';document.getElementById(type+'-done').style.display='none';}
+
+// ════ SAVE ════
+function saveAndReturn(){
+  const name=document.getElementById('audFinalName')?.value||document.getElementById('rpNameInp')?.value||'New Audience';
+  // Show success then return to audience list
+  document.getElementById('audBuilder').classList.remove('show');
+  document.getElementById('audEntry').style.display='flex';
+  alert('Audience "'+name+'" saved.\n\nNow available in campaign audience picker.');
+}
+
+// ════ SPARK ════
+function spark(id,text){
+  const el=document.getElementById('sug-'+id);
+  const html=`<div class="ai-sug-label"><i class="ti ti-sparkles"></i> AI suggestion</div><div class="ai-sug-text">${text}</div><div class="ai-sug-actions"><button class="ai-sug-btn ai-sug-accept" onclick="this.closest('.ai-suggestion').classList.remove('visible')">Accept</button><button class="ai-sug-btn ai-sug-dismiss" onclick="this.closest('.ai-suggestion').classList.remove('visible');document.getElementById('floater').style.display='none'">Dismiss</button></div>`;
+  if(el){el.innerHTML=html;el.classList.add('visible');}
+  else{const f=document.getElementById('floater');f.innerHTML=html;f.style.display='block';f.classList.add('visible');}
+}
+
+buildProgress();updateProgress();
+</script>
+</body>
+</html>
