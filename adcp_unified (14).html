@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADCP — Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#1a1a1a;min-height:100vh;font-size:14px;display:flex}
+
+/* ════ SIDEBAR ════ */
+.sidebar{width:220px;min-height:100vh;background:#0d1117;display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:300;transition:width .22s ease;overflow:hidden;flex-shrink:0}
+.sidebar.collapsed{width:52px}
+.sb-top{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:52px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.sb-brand{font-size:15px;font-weight:800;color:#fff;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;transition:opacity .15s}
+.sb-brand span{color:#3b82f6}
+.sidebar.collapsed .sb-brand{opacity:0;width:0;pointer-events:none}
+.sb-toggle{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.4);font-size:16px;transition:all .15s;flex-shrink:0}
+.sb-toggle:hover{background:rgba(255,255,255,.08);color:#fff}
+.sidebar.collapsed .sb-toggle{margin:0 auto}
+.sb-nav{flex:1;padding:10px 8px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.5);font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap;overflow:hidden;flex-shrink:0}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.sb-item.active{background:rgba(0,80,200,.35);color:#fff}
+.sb-item i{font-size:16px;flex-shrink:0;width:20px;text-align:center}
+.sb-label{transition:opacity .15s}
+.sidebar.collapsed .sb-label{opacity:0;width:0;overflow:hidden}
+.sb-divider{height:1px;background:rgba(255,255,255,.07);margin:8px 2px;flex-shrink:0}
+.sb-group-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.22);padding:6px 10px 2px;white-space:nowrap;overflow:hidden;transition:opacity .15s;flex-shrink:0}
+.sidebar.collapsed .sb-group-label{opacity:0}
+.sb-bottom{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.sb-item-profile{gap:9px}
+.sb-avatar{width:28px;height:28px;border-radius:50%;background:#0050c8;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-profile-info{overflow:hidden;transition:opacity .15s}
+.sb-profile-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.75);white-space:nowrap}
+.sb-profile-role{font-size:10px;color:rgba(255,255,255,.3);white-space:nowrap}
+.sidebar.collapsed .sb-profile-info{opacity:0;width:0;overflow:hidden}
+
+/* ════ MAIN WRAPPER ════ */
+.sb-main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;transition:margin-left .22s ease;min-width:0}
+.sb-main.collapsed{margin-left:52px}
+
+/* ════ SLIM TOPBAR ════ */
+.topbar-slim{display:flex;align-items:center;justify-content:space-between;height:48px;padding:0 24px;border-bottom:1px solid #e8e8e8;background:#fff;position:sticky;top:0;z-index:200;flex-shrink:0}
+.topbar-slim-left{font-size:12px;font-weight:600;color:#999}
+.step-counter{font-size:12px;color:#888}
+
+.btn{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #e0e0e0;background:#fff;color:#444;transition:all .15s}
+.btn:hover{background:#f5f5f5}
+.btn-primary{background:#0050c8;color:#fff;border-color:#0050c8}
+.btn-primary:hover{background:#0040a8}
+.btn-sm{height:30px;padding:0 12px;font-size:11px;font-weight:600;border-radius:6px}
+.btn-lg{height:42px;padding:0 22px;font-size:13px;border-radius:9px}
+
+/* ════ VIEWS ════ */
+.view{display:none}
+.view.active{display:block}
+.view{display:none}
+.view.active{display:block}
+
+/* ════ PROGRESS BAR ════ */
+.progress-wrap{padding:12px 24px 0;background:#fff;position:sticky;top:48px;z-index:199}
+.progress-steps{display:flex;align-items:flex-start}
+.prog-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.prog-dot{width:26px;height:26px;border-radius:50%;border:1.5px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#bbb;transition:all .2s;flex-shrink:0}
+.prog-dot.active{background:#fff;border-color:#0050c8;color:#0050c8;box-shadow:0 0 0 3px rgba(0,80,200,.12)}
+.prog-dot.done{background:#0050c8;border-color:#0050c8;color:#fff}
+.prog-line{flex:1;height:1.5px;margin:0 3px;margin-top:12px;background:#e0e0e0;transition:background .3s}
+.prog-line.done{background:#0050c8}
+.prog-lbl{font-size:9px;color:#bbb;white-space:nowrap;text-align:center;max-width:72px;line-height:1.3}
+.prog-lbl.active{color:#0050c8;font-weight:600}
+.prog-lbl.done{color:#555}
+.pbar-line{height:2px;background:#f0f0f0;margin-top:10px;border-radius:2px;overflow:hidden}
+.pbar-fill{height:100%;background:#0050c8;border-radius:2px;transition:width .35s ease}
+
+/* ════ CAMPAIGN MAIN ════ */
+.camp-main{flex:1;padding:24px 32px 48px;max-width:800px;margin:0 auto;width:100%}
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* screen headers */
+.screen-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0050c8;background:#eef2ff;padding:3px 9px;border-radius:4px;margin-bottom:8px}
+.screen-title{font-size:20px;font-weight:700;color:#111;margin-bottom:4px}
+.screen-sub{font-size:13px;color:#777;margin-bottom:24px}
+
+/* fields */
+.field-wrap{margin-bottom:16px}
+.field-label-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.flabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#999}
+.field-box{height:38px;background:#f8f8f8;border:1px solid #e4e4e4;border-radius:8px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#1a1a1a}
+.field-box.filled{background:#fff;border-color:#c0cfe8}
+.field-box.placeholder{color:#bbb;font-style:italic}
+.editable-field{height:38px;border:1px solid #c0cfe8;border-radius:8px;padding:0 12px;font-size:13px;width:100%;outline:none;background:#fff;font-family:inherit;color:#1a1a1a;transition:border-color .15s}
+.editable-field:focus{border-color:#0050c8}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#ccc;margin:20px 0 10px}
+
+/* tooltip */
+.tooltip-wrap{position:relative;display:inline-flex}
+.tooltip-icon{width:15px;height:15px;border-radius:50%;border:1px solid #d8d8d8;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:help;color:#bbb;font-size:10px;flex-shrink:0}
+.tooltip-icon:hover{border-color:#999;color:#666}
+.tooltip-box{display:none;position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#1a1a1a;color:#f5f5f5;font-size:11px;line-height:1.5;padding:7px 11px;border-radius:6px;width:210px;z-index:999;pointer-events:none}
+.tooltip-wrap:hover .tooltip-box{display:block}
+
+/* spark */
+.spark-btn{width:20px;height:20px;border-radius:5px;background:#f3f0ff;border:1px solid #c4b5fd;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#6d28d9;font-size:11px;flex-shrink:0;transition:all .12s}
+.spark-btn:hover{background:#ede9fe;border-color:#7c3aed}
+.ai-suggestion{background:#faf8ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 14px;margin-top:6px;display:none}
+.ai-suggestion.visible{display:block;animation:fadeUp .15s ease}
+.ai-sug-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#7c3aed;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.ai-sug-text{font-size:12px;color:#3b0764;line-height:1.55;margin-bottom:8px}
+.ai-sug-actions{display:flex;gap:7px}
+.ai-sug-btn{font-size:11px;font-weight:600;padding:4px 12px;border-radius:5px;cursor:pointer;border:1px solid;transition:all .12s}
+.ai-sug-accept{background:#5b21b6;color:#fff;border-color:#5b21b6}
+.ai-sug-dismiss{background:#fff;color:#888;border-color:#e0e0e0}
+
+/* tags */
+.tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 8px;border-radius:4px;margin:2px}
+.tag.blue{background:#eef2ff;color:#0050c8}
+.tag.green{background:#ecfdf5;color:#065f46}
+
+/* KPI chips */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+/* ── CAMPAIGN LIST ── */
+.cl-tab{padding:10px 16px;font-size:12px;font-weight:600;color:#bbb;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.cl-tab:hover{color:#555}
+.cl-tab.active{color:#0050c8;border-bottom-color:#0050c8}
+.cl-badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.cl-badge.live{background:#ecfdf5;color:#065f46}
+.cl-badge.approval{background:#fffbeb;color:#92400e}
+.cl-badge.draft{background:#f3f4f6;color:#6b7280}
+.camp-status-group{margin-bottom:20px}
+.csg-label{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#999;margin-bottom:10px}
+.csg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.camp-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:18px 20px;transition:box-shadow .15s}
+.camp-card:hover{box-shadow:0 2px 14px rgba(0,0,0,.07)}
+.camp-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:12px}
+.camp-card-name{font-size:14px;font-weight:700;color:#111;margin-bottom:3px}
+.camp-card-meta{font-size:12px;color:#999}
+.camp-card-stats{display:flex;gap:0;border:1px solid #f0f0f0;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.cstat{flex:1;padding:10px 12px;border-right:1px solid #f0f0f0;text-align:center}
+.cstat:last-child{border-right:none}
+.cstat-val{font-size:13px;font-weight:700;color:#111;margin-bottom:2px}
+.cstat-lbl{font-size:10px;color:#bbb}
+.camp-card-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.camp-aud-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#0050c8;background:#eef2ff;padding:3px 9px;border-radius:20px;font-weight:500}
+.camp-rails-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#555;background:#f3f4f6;padding:3px 9px;border-radius:20px;font-weight:500}
+
+.kpi-card{border:1px solid #e4e4e4;border-radius:9px;padding:14px 16px;cursor:pointer;transition:all .15s;background:#fff}
+.kpi-card:hover{border-color:#c0cfe8;background:#fafcff}
+.kpi-card.sel{border-color:#0050c8;background:#f5f8ff}
+.kpi-card-icon{font-size:20px;color:#bbb;margin-bottom:8px}
+.kpi-card.sel .kpi-card-icon{color:#0050c8}
+.kpi-card-label{font-size:13px;font-weight:700;color:#555;margin-bottom:4px}
+.kpi-card.sel .kpi-card-label{color:#0050c8}
+.kpi-card-sub{font-size:11px;color:#bbb;line-height:1.5}
+
+/* audience picker cards */
+.aud-pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.aud-pick-card{border:1px solid #e4e4e4;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;background:#fff;position:relative}
+.aud-pick-card:hover{border-color:#c0cfe8;background:#fafcff}
+.aud-pick-card.sel{border-color:#0050c8;background:#f5f8ff}
+.aud-pick-name{font-size:13px;font-weight:700;color:#111;margin-bottom:3px}
+.aud-pick-card.sel .aud-pick-name{color:#0050c8}
+.aud-pick-sub{font-size:11px;color:#999;margin-bottom:8px}
+.aud-pick-tags{display:flex;flex-wrap:wrap;gap:3px}
+.aud-pick-meta{font-size:11px;color:#bbb;margin-top:8px;padding-top:7px;border-top:1px solid #f0f0f0}
+.aud-pick-check{position:absolute;top:12px;right:12px;width:18px;height:18px;border-radius:50%;background:#0050c8;display:none;align-items:center;justify-content:center}
+.aud-pick-check i{font-size:10px;color:#fff}
+.aud-pick-card.sel .aud-pick-check{display:flex}
+.new-aud-card{border:1.5px dashed #d0d9ed;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;color:#0050c8;font-size:13px;font-weight:600;min-height:100px}
+.new-aud-card:hover{background:#f5f8ff;border-color:#0050c8}
+.selected-aud-preview{background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:14px 16px;margin-bottom:14px;display:none}
+.sap-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sap-name{font-size:13px;font-weight:700;color:#0050c8}
+.sap-change{font-size:11px;color:#888;cursor:pointer;text-decoration:underline}
+.sap-change:hover{color:#0050c8}
+.sap-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.sap-stats{display:flex;gap:16px}
+.sap-stat{font-size:11px;color:#666}
+.sap-stat strong{color:#111}
+
+/* reach + budget step */
+.ch-table{border:1px solid #e8e8e8;border-radius:10px;overflow:visible;margin-bottom:8px}
+.ch-row{display:grid;grid-template-columns:32px 110px 1fr 86px 76px 32px 22px;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f0f0f0;font-size:12px}
+.ch-row:last-child{border-bottom:none}
+.ch-row.hdr{background:#f8f8f8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#bbb;border-radius:10px 10px 0 0}
+.ch-toggle{width:28px;height:16px;border-radius:8px;background:#e0e0e0;position:relative;cursor:pointer;transition:background .15s;flex-shrink:0}
+.ch-toggle.on{background:#0050c8}
+.ch-toggle::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}
+.ch-toggle.on::after{left:14px}
+.budget-input{height:30px;border:1px solid #e0e0e0;border-radius:6px;padding:0 8px;font-size:12px;width:100%;background:#fff;color:#1a1a1a;outline:none;transition:all .15s}
+.budget-input:focus{border-color:#0050c8;background:#f5f8ff}
+.budget-input:disabled{background:#f5f5f5;color:#bbb;border-color:#f0f0f0}
+.lock-btn{width:26px;height:26px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#bbb;font-size:12px;transition:all .15s}
+.lock-btn.locked{background:#fef3c7;border-color:#f59e0b;color:#b45309}
+.rebalance-note{font-size:11px;color:#666;background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.budget-total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f5f8ff;border:1px solid #d0dcf0;border-radius:8px;margin-bottom:18px;font-size:12px}
+.btotal-ok{color:#065f46;font-weight:600}
+.btotal-warn{color:#991b1b;font-weight:600}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:#f8f8f8;border-radius:10px;padding:14px 16px}
+.stat-val{font-size:22px;font-weight:700;color:#111}
+.stat-lbl{font-size:11px;color:#999;margin-top:3px}
+.pbar-wrap{margin-bottom:12px}
+.pbar-labels{display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:5px;align-items:center}
+.pbar-track{height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.pbar-fill-bar{height:100%;border-radius:3px;background:#0050c8}
+
+/* channel creatives */
+.channel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.channel-card{border:1px solid #e4e4e4;border-radius:10px;padding:14px 16px;background:#fff}
+.channel-card.on{border-color:#0050c8;background:#f5f8ff}
+.channel-name{font-size:13px;font-weight:700;color:#111;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.channel-card.on .channel-name{color:#0050c8}
+.channel-sub{font-size:11px;color:#999;margin-bottom:10px}
+.channel-card.on .channel-sub{color:#6a8fc8}
+.check-dot{width:15px;height:15px;border-radius:50%;background:#0050c8;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-dot i{font-size:9px;color:#fff}
+.upload-zone{border:1.5px dashed #d0d9ed;border-radius:8px;padding:14px 12px;text-align:center;background:#fafbff;margin-top:4px}
+.upload-zone-label{font-size:12px;color:#aaa;margin-bottom:6px}
+.pub-target{background:#f9fafb;border:1px solid #e8e8e8;border-radius:8px;padding:10px 12px;margin-top:8px}
+.pub-toggle{display:flex;gap:6px;margin-bottom:7px}
+.pub-toggle-btn{height:24px;padding:0 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #e0e0e0;background:#fff;color:#888;transition:all .12s}
+.pub-toggle-btn.active-inc{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+.pub-toggle-btn.active-exc{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+.pub-target-row{display:flex;gap:6px;margin-bottom:6px}
+.pub-input{flex:1;height:28px;border:1px solid #e0e0e0;border-radius:6px;padding:0 8px;font-size:12px;outline:none;background:#fff}
+.pub-input:focus{border-color:#0050c8}
+.pub-add-btn{height:28px;padding:0 10px;border-radius:6px;background:#0050c8;color:#fff;border:none;font-size:11px;font-weight:600;cursor:pointer}
+.pub-tags{display:flex;flex-wrap:wrap;gap:4px}
+.pub-tag-item{display:inline-flex;align-items:center;gap:4px;background:#ecfdf5;color:#065f46;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
+.pub-tag-item.excl{background:#fef2f2;color:#991b1b}
+.pub-tag-x{cursor:pointer;opacity:.6;font-size:10px}
+.pub-tag-x:hover{opacity:1}
+
+/* submission */
+.submit-wrap{text-align:center;padding:48px 24px}
+.submit-icon{width:64px;height:64px;border-radius:50%;background:#eef2ff;border:2px solid #c0cfe8;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:#0050c8}
+.submit-title{font-size:22px;font-weight:700;color:#111;margin-bottom:8px}
+.submit-sub{font-size:13px;color:#777;margin-bottom:28px;line-height:1.6}
+.submit-summary{border:1px solid #e8e8e8;border-radius:10px;overflow:hidden;margin-bottom:24px;text-align:left}
+.submit-row{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid #f0f0f0;font-size:13px}
+.submit-row:last-child{border-bottom:none}
+.submit-key{color:#666}
+.submit-val{color:#111;font-weight:600}
+.submit-status{display:inline-flex;align-items:center;gap:6px;background:#fff8ec;border:1px solid #fed7aa;border-radius:8px;padding:10px 16px;font-size:12px;color:#9a3412;font-weight:500;margin-bottom:24px}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px}
+.badge-live{background:#ecfdf5;color:#065f46}
+.badge-warn{background:#fffbeb;color:#92400e}
+
+/* nav row */
+.nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:20px;border-top:1px solid #f0f0f0}
+
+/* prompt */
+.prompt-screen{min-height:62vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 0}
+.prompt-logo{font-size:28px;font-weight:800;color:#0050c8;margin-bottom:6px;letter-spacing:-.02em}
+.prompt-headline{font-size:14px;color:#888;margin-bottom:32px}
+.prompt-box-wrap{width:100%;max-width:600px;position:relative}
+.prompt-box{width:100%;min-height:76px;padding:14px 52px 14px 16px;border:1.5px solid #c0cfe8;border-radius:12px;font-size:14px;color:#1a1a1a;line-height:1.6;outline:none;resize:none;background:#f5f8ff;font-family:inherit;transition:border-color .2s}
+.prompt-box:focus{border-color:#0050c8;background:#fff}
+.prompt-box::placeholder{color:#aab8d4}
+.prompt-submit{position:absolute;bottom:12px;right:12px;width:34px;height:34px;border-radius:9px;background:#0050c8;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;transition:background .15s}
+.prompt-submit:hover{background:#0040a8}
+.prompt-hints{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:12px}
+.prompt-hint{font-size:11px;color:#0050c8;background:#eef2ff;border:1px solid #c0cfe8;border-radius:20px;padding:4px 12px;cursor:pointer;transition:all .12s}
+.prompt-hint:hover{background:#dce8ff}
+.gen-bar{display:none;align-items:center;gap:10px;background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:12px 16px;margin-bottom:20px}
+.gen-bar.show{display:flex}
+.gen-spin{width:16px;height:16px;border:2px solid #c0cfe8;border-top-color:#0050c8;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-txt{font-size:12px;color:#0050c8}
+
+/* ════ AUDIENCE MODULE VIEW ════ */
+#aud-view{background:#f5f6f8;min-height:calc(100vh - 52px)}
+.aud-view-inner{display:flex;flex-direction:row;min-height:calc(100vh - 52px)}
+
+/* aud entry */
+.aud-entry{padding:48px 32px;flex:1;display:flex;align-items:center;justify-content:center}
+.aud-entry-inner{max-width:700px;width:100%}
+.aud-entry-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px}
+.aud-entry-title{font-size:20px;font-weight:700;color:#111;margin-bottom:4px}
+.aud-entry-sub{font-size:13px;color:#888}
+
+/* saved audience list */
+.saved-aud-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.saved-card{border:1px solid #e4e4e4;border-radius:10px;padding:14px 16px;background:#fff;cursor:pointer;transition:all .15s}
+.saved-card:hover{border-color:#c0cfe8;box-shadow:0 2px 12px rgba(0,80,200,.07)}
+.saved-card-name{font-size:13px;font-weight:700;color:#111;margin-bottom:3px}
+.saved-card-sub{font-size:11px;color:#999;margin-bottom:8px;line-height:1.4}
+.saved-card-tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.saved-card-meta{font-size:10px;color:#bbb;display:flex;align-items:center;gap:5px;border-top:1px solid #f0f0f0;padding-top:7px;margin-top:auto}
+.new-saved-card{border:1.5px dashed #d0d9ed;border-radius:10px;padding:14px 16px;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#0050c8;font-size:12px;font-weight:600;min-height:130px;transition:all .15s}
+.new-saved-card:hover{background:#f5f8ff;border-color:#0050c8}
+
+/* aud builder layout */
+.aud-builder{display:none;flex:1}
+.aud-builder.show{display:flex;flex-direction:row}
+.aud-builder-left{flex:1;padding:28px;overflow-y:auto;max-width:calc(100% - 300px)}
+.aud-builder-right{width:300px;background:#fff;border-left:1px solid #e8e8e8;position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;padding:18px;display:flex;flex-direction:column}
+
+/* path entry */
+.path-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:0}
+.path-card{border:1.5px solid #e4e4e4;border-radius:12px;padding:24px 20px;cursor:pointer;transition:all .18s;background:#fff;text-align:left;position:relative;overflow:hidden}
+.path-card:hover{border-color:#0050c8;transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,80,200,.1)}
+.path-card-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:3px 9px;border-radius:20px;margin-bottom:14px}
+.path-card-badge.blue{background:#eef2ff;color:#0050c8}
+.path-card-badge.teal{background:#ecfdf5;color:#065f46}
+.path-card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px}
+.path-card-icon.blue{background:#eef2ff;color:#0050c8}
+.path-card-icon.teal{background:#ecfdf5;color:#065f46}
+.path-card-title{font-size:15px;font-weight:700;color:#111;margin-bottom:5px}
+.path-card-desc{font-size:12px;color:#888;line-height:1.5;margin-bottom:14px}
+.path-card-steps{display:flex;flex-direction:column;gap:4px}
+.pc-step{display:flex;align-items:center;gap:6px;font-size:11px;color:#777}
+.pc-step i{font-size:11px;color:#c0cfe8}
+.path-card-arrow{position:absolute;bottom:20px;right:20px;width:28px;height:28px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:13px;color:#bbb;transition:all .15s}
+.path-card:hover .path-card-arrow{background:#0050c8;color:#fff}
+
+/* aud flow step strip */
+.aud-step-strip{display:flex;align-items:center;gap:0;background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:10px 16px;margin-bottom:24px;overflow-x:auto}
+.aud-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#bbb;white-space:nowrap;cursor:pointer;padding:3px 8px;border-radius:6px;transition:all .15s}
+.aud-pill:hover{background:#f5f5f5;color:#555}
+.aud-pill.active{background:#eef2ff;color:#0050c8}
+.aud-pill.done{color:#065f46}
+.aud-pill .pill-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid #d0d0d0;background:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#bbb;flex-shrink:0;transition:all .15s}
+.aud-pill.active .pill-dot{border-color:#0050c8;color:#0050c8;background:#eef2ff}
+.aud-pill.done .pill-dot{border-color:#22c55e;background:#22c55e;color:#fff}
+.pill-sep{color:#e0e0e0;font-size:11px;margin:0 1px;flex-shrink:0}
+.aud-step-panel{display:none}
+.aud-step-panel.active{display:block;animation:fadeUp .18s ease}
+.aud-step-title{font-size:18px;font-weight:700;color:#111;margin-bottom:4px}
+.aud-step-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+
+/* aud form elements */
+.aud-flabel{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.aud-field-mb{margin-bottom:14px}
+.aud-input{height:36px;border:1px solid #e0e0e0;border-radius:8px;padding:0 12px;font-size:13px;width:100%;outline:none;background:#fff;color:#1a1a1a;transition:border-color .15s;font-family:inherit}
+.aud-input:focus{border-color:#0050c8;background:#f5f8ff}
+.aud-input::placeholder{color:#bbb}
+.aud-upload-zone{border:1.5px dashed #d0d9ed;border-radius:10px;padding:18px;text-align:center;background:#fafbff;cursor:pointer;transition:all .15s}
+.aud-upload-zone:hover{border-color:#0050c8;background:#f5f8ff}
+.aud-upload-icon{font-size:22px;color:#c0cfe8;margin-bottom:7px}
+.aud-upload-label{font-size:12px;color:#aaa;line-height:1.6}
+.aud-upload-label strong{color:#0050c8;font-weight:600}
+.aud-upload-done{display:flex;align-items:center;gap:8px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;font-size:12px;color:#065f46;font-weight:500}
+.aud-upload-done i{font-size:14px}
+.geo-tag{display:inline-flex;align-items:center;gap:5px;background:#eef2ff;color:#0050c8;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid #c0cfe8}
+.geo-tag-x{cursor:pointer;color:#7096d8;font-size:10px}
+.geo-tag-x:hover{color:#0050c8}
+.quick-geos{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.quick-geo{font-size:11px;color:#0050c8;background:#f5f8ff;border:1px solid #c0cfe8;border-radius:5px;padding:3px 9px;cursor:pointer;transition:all .12s}
+.quick-geo:hover{background:#eef2ff}
+.gender-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+.gender-card{border:1px solid #e0e0e0;border-radius:9px;padding:11px;cursor:pointer;transition:all .15s;background:#fff;text-align:center}
+.gender-card:hover{border-color:#c0cfe8}
+.gender-card.sel{border-color:#0050c8;background:#f5f8ff}
+.gender-icon{font-size:16px;margin-bottom:3px;color:#bbb}
+.gender-card.sel .gender-icon{color:#0050c8}
+.gender-lbl{font-size:11px;font-weight:700;color:#888}
+.gender-card.sel .gender-lbl{color:#0050c8}
+.gender-cnt{font-size:10px;color:#bbb;margin-top:1px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:7px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;transition:all .12s;color:#666}
+.chip:hover{border-color:#c0cfe8;background:#f5f8ff;color:#0050c8}
+.chip.sel{background:#0050c8;color:#fff;border-color:#0050c8}
+.int-cats{display:flex;flex-wrap:wrap;gap:6px}
+.int-cat{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;transition:all .12s;color:#666}
+.int-cat:hover{border-color:#c0cfe8}
+.int-cat.sel{background:#0050c8;color:#fff;border-color:#0050c8}
+.aff-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.aff-chip{font-size:11px;padding:4px 11px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;color:#666;transition:all .12s}
+.aff-chip:hover{border-color:#c0cfe8}
+.aff-chip.sel{background:#eef2ff;color:#0050c8;border-color:#c0cfe8;font-weight:600}
+.excl-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:#fff;border:1px solid #e8e8e8;border-radius:9px;cursor:pointer;margin-bottom:8px;transition:border-color .15s}
+.excl-item:hover{border-color:#c0cfe8}
+.excl-label{font-size:12px;font-weight:600;color:#444}
+.excl-sub{font-size:11px;color:#bbb;margin-top:1px}
+.toggle-sw{width:34px;height:19px;border-radius:10px;background:#e0e0e0;position:relative;transition:background .2s;flex-shrink:0}
+.toggle-sw.on{background:#0050c8}
+.toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle-sw.on::after{left:18px}
+.inferred-card{background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.inf-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.inf-icon{width:28px;height:28px;border-radius:8px;background:#0050c8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0}
+.inf-title{font-size:12px;font-weight:700;color:#0050c8}
+.inf-sub{font-size:11px;color:#6a8fc8}
+.inf-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:7px}
+.inf-tag{display:inline-block;font-size:11px;font-weight:500;padding:3px 9px;border-radius:4px;background:#eef2ff;color:#0050c8}
+.inf-note{font-size:11px;color:#6a8fc8;line-height:1.5}
+.aud-divider{height:1px;background:#f0f0f0;margin:16px 0}
+.aud-step-nav{display:flex;align-items:center;justify-content:space-between;margin-top:24px;padding-top:18px;border-top:1px solid #f0f0f0}
+
+/* reach panel */
+.rp-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#bbb;margin-bottom:14px}
+.rp-big{text-align:center;padding:14px 0 12px;border-bottom:1px solid #f0f0f0;margin-bottom:12px}
+.rp-num{font-size:34px;font-weight:800;color:#111;letter-spacing:-.02em;line-height:1;transition:all .25s}
+.rp-lbl{font-size:11px;color:#aaa;margin-top:5px}
+.rp-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-top:6px}
+.rp-badge.neutral{background:#f3f4f6;color:#6b7280}
+.rp-badge.down{background:#fef2f2;color:#991b1b}
+.rp-section{margin-bottom:12px}
+.rp-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#ccc;margin-bottom:8px}
+.rp-bar-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.rp-bar-lbl{font-size:11px;color:#888;width:48px;flex-shrink:0}
+.rp-bar-track{flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.rp-bar-fill{height:100%;border-radius:3px;background:#0050c8;transition:width .4s}
+.rp-bar-fill.pink{background:#ec4899}
+.rp-bar-val{font-size:11px;font-weight:600;color:#555;width:32px;text-align:right;flex-shrink:0}
+.rp-ch-row{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:#f8f8f8;border-radius:7px;margin-bottom:5px;font-size:11px}
+.rp-ch-name{color:#666;display:flex;align-items:center;gap:5px}
+.rp-ch-val{font-weight:700;color:#111;font-size:12px}
+.funnel-row{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid #f8f8f8;font-size:11px}
+.funnel-row:last-child{border-bottom:none}
+.funnel-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.funnel-name{color:#888;flex:1}
+.funnel-val{font-weight:700;color:#111;font-size:12px}
+.funnel-row.current .funnel-val{color:#0050c8}
+.rp-save{margin-top:auto;padding-top:12px;border-top:1px solid #f0f0f0}
+.rp-name-inp{height:34px;border:1px solid #e0e0e0;border-radius:7px;padding:0 10px;font-size:12px;width:100%;outline:none;background:#fff;color:#1a1a1a;margin-bottom:7px;font-family:inherit;transition:border-color .15s}
+.rp-name-inp:focus{border-color:#0050c8}
+.rp-save-btn{width:100%;height:38px;background:#0050c8;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s}
+.rp-save-btn:hover{background:#0040a8}
+.rp-save-btn:disabled{background:#c0cfe8;cursor:not-allowed}
+
+/* ── ANCHOR NAV ── */
+.anav-item{padding:12px 12px;font-size:11px;font-weight:600;color:#bbb;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s}
+.anav-item:hover{color:#555}
+.anav-item.active{color:#0050c8;border-bottom-color:#0050c8}
+.anav-item.done{color:#065f46}
+.anav-sep{font-size:11px;color:#e0e0e0;padding:0 2px;margin-bottom:2px}
+
+/* ── FORM SECTIONS ── */
+.form-section{background:#fff;border:1px solid #ebebeb;border-radius:12px;overflow:hidden;margin-bottom:12px;transition:box-shadow .15s}
+.form-section:focus-within{box-shadow:0 0 0 2px rgba(0,80,200,.1);border-color:#c0cfe8}
+.fsec-header{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;background:#fff}
+.fsec-header:hover{background:#fafafa}
+.fsec-num{width:20px;height:20px;border-radius:50%;background:#0050c8;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fsec-num.done{background:#22c55e}
+.fsec-title{font-size:13px;font-weight:700;color:#111}
+.fsec-badge{flex:1;margin-left:4px}
+.fsec-badge span{font-size:11px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsec-toggle{font-size:14px;color:#bbb;transition:transform .2s;flex-shrink:0}
+.fsec-toggle.collapsed{transform:rotate(180deg)}
+.fsec-body{padding:0 16px 16px;border-top:1px solid #f5f5f5}
+.fsec-body.collapsed{display:none}
+
+/* ── CREATIVE PICKER IN CAMPAIGN FLOW ── */
+.crv-selected-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;min-height:0}
+.crv-sel-item{display:flex;align-items:center;gap:7px;background:#f8f8f8;border:1px solid #f0f0f0;border-radius:7px;padding:6px 8px;font-size:11px}
+.crv-sel-thumb{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.crv-sel-name{font-weight:600;color:#111;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crv-sel-dim{color:#aaa;flex-shrink:0;font-size:10px}
+.crv-sel-remove{cursor:pointer;color:#bbb;font-size:10px;margin-left:4px;flex-shrink:0}
+.crv-sel-remove:hover{color:#ef4444}
+.crv-add-row{display:flex;gap:6px;margin-bottom:8px}
+.crv-upload-btn,.crv-library-btn{flex:1;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s}
+.crv-upload-btn{border:1px dashed #d0d9ed;background:#fafbff;color:#0050c8}
+.crv-upload-btn:hover{border-color:#0050c8;background:#f5f8ff}
+.crv-library-btn{border:1px solid #e0e0e0;background:#fff;color:#555}
+.crv-library-btn:hover{border-color:#c0cfe8;background:#f5f8ff;color:#0050c8}
+.crv-inline-picker{background:#f5f8ff;border:1px solid #c0cfe8;border-radius:9px;padding:10px;margin-top:4px;animation:fadeUp .15s ease}
+.cip-header{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;color:#0050c8;margin-bottom:8px}
+.cip-close{cursor:pointer;color:#aaa;font-size:12px;font-weight:400}
+.cip-close:hover{color:#555}
+.cip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cip-item{border:1px solid #e0e0e0;border-radius:7px;overflow:hidden;cursor:pointer;background:#fff;transition:all .12s}
+.cip-item:hover{border-color:#0050c8;transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,80,200,.1)}
+.cip-thumb{height:52px;display:flex;align-items:center;justify-content:center}
+.cip-name{font-size:10px;font-weight:600;color:#111;padding:4px 6px 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cip-dim{font-size:9px;color:#aaa;padding:0 6px 5px}
+
+/* ── CREATIVES LIBRARY ── */
+.crv-card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden;transition:all .15s;cursor:pointer}
+.crv-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.09);transform:translateY(-1px);border-color:#c0cfe8}
+.crv-thumb{height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.crv-thumb-vast{height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.crv-body{padding:12px}
+.crv-name{font-size:12px;font-weight:700;color:#111;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crv-dims{font-size:11px;color:#aaa;margin-bottom:7px}
+.crv-channels{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px}
+.crv-ch-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;background:#eef2ff;color:#0050c8}
+.crv-foot{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid #f5f5f5}
+.crv-used{font-size:10px;color:#bbb}
+.crv-status{font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px}
+.active-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:#22c55e;display:inline-block}
+.active-dot{color:#065f46}
+.rejected-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:#ef4444;display:inline-block}
+.rejected-dot{color:#991b1b}
+.crv-upload-card{border:2px dashed #e0e0e0;background:transparent}
+.crv-upload-card:hover{border-color:#0050c8;background:#f5f8ff;box-shadow:none;transform:none}
+.crv-list-row{display:grid;grid-template-columns:40px 2fr 1fr 1fr 1fr 1fr 80px;gap:0;padding:12px 16px;border-bottom:1px solid #f5f5f5;align-items:center;font-size:12px;transition:background .12s;cursor:pointer}
+.crv-list-row:last-child{border-bottom:none}
+.crv-list-row:hover{background:#fafafa}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#e0e0e0;border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ════ LEFT SIDEBAR ════ -->
+<div class="sidebar" id="sidebar">
+
+  <!-- top: brand + toggle -->
+  <div class="sb-top">
+    <div class="sb-brand" id="sbBrand">ADCP<span>.</span></div>
+    <div class="sb-toggle" id="sbToggle" onclick="toggleSidebar()" title="Toggle menu">
+      <i class="ti ti-layout-sidebar-left-collapse" id="sbToggleIcon"></i>
+    </div>
+  </div>
+
+  <!-- main nav -->
+  <div class="sb-nav">
+
+    <div class="sb-item" id="sbi-new" onclick="sidebarNav('new')">
+      <i class="ti ti-plus"></i>
+      <span class="sb-label">New Campaign</span>
+    </div>
+
+    <div class="sb-item" id="sbi-camp" onclick="sidebarNav('camp')">
+      <i class="ti ti-layout-list"></i>
+      <span class="sb-label">All Campaigns</span>
+    </div>
+
+    <div class="sb-divider"></div>
+    <div class="sb-group-label">Controls</div>
+
+    <div class="sb-item" id="sbi-aud" onclick="sidebarNav('aud')">
+      <i class="ti ti-users"></i>
+      <span class="sb-label">Audiences</span>
+    </div>
+
+    <div class="sb-item" id="sbi-rails" onclick="sidebarNav('rails')">
+      <i class="ti ti-adjustments-horizontal"></i>
+      <span class="sb-label">Rails</span>
+    </div>
+
+    <div class="sb-item" id="sbi-creatives" onclick="sidebarNav('creatives')">
+      <i class="ti ti-photo"></i>
+      <span class="sb-label">Creatives</span>
+    </div>
+
+  </div>
+
+  <!-- bottom: profile -->
+  <div class="sb-bottom">
+    <div class="sb-item sb-item-profile" id="sbi-profile" onclick="sidebarNav('profile')">
+      <div class="sb-avatar">J</div>
+      <div class="sb-profile-info">
+        <div class="sb-profile-name">John Doe</div>
+        <div class="sb-profile-role">Product Strategy</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════ MAIN WRAPPER ════ -->
+<div class="sb-main" id="sbMain">
+
+<!-- ════ SLIM TOP BAR (breadcrumb + step counter only) ════ -->
+<div class="topbar-slim">
+  <div class="topbar-slim-left" id="topbarLeft">ADCP</div>
+  <div class="step-counter" id="stepCounter">Campaigns</div>
+</div>
+
+<!-- ════ PROGRESS BAR ════ -->
+<div class="progress-wrap" id="progressWrap" style="display:none">
+  <div class="progress-steps" id="progressSteps"></div>
+  <div class="pbar-line"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+</div>
+
+<!-- ════════════════════════════════
+     CAMPAIGN VIEW
+════════════════════════════════ -->
+<div class="view active" id="camp-view">
+
+  <!-- CAMPAIGN LIST -->
+  <div id="campList" style="background:#f5f6f8;min-height:calc(100vh - 52px);padding:32px 28px 60px">
+    <div style="max-width:960px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:3px">Campaigns</div>
+          <div style="font-size:13px;color:#888">All campaigns across this account</div>
+        </div>
+        <button class="btn btn-primary" onclick="showCampFlow()"><i class="ti ti-plus"></i> New campaign</button>
+      </div>
+
+      <!-- status tabs -->
+      <div style="display:flex;border-bottom:2px solid #ebebeb;margin-bottom:20px">
+        <div class="cl-tab active" id="cltab-all" onclick="setCampTab('all')">All</div>
+        <div class="cl-tab" id="cltab-live" onclick="setCampTab('live')">Live</div>
+        <div class="cl-tab" id="cltab-approval" onclick="setCampTab('approval')">Under approval</div>
+        <div class="cl-tab" id="cltab-draft" onclick="setCampTab('draft')">Draft</div>
+        <div class="cl-tab" id="cltab-published" onclick="setCampTab('published')">Published</div>
+      </div>
+
+      <!-- campaign cards -->
+      <div id="campCards">
+
+        <!-- LIVE -->
+        <div class="camp-status-group" id="csg-live">
+          <div class="csg-label"><span class="csg-dot" style="background:#22c55e"></span> Live</div>
+          <div class="camp-card">
+            <div class="camp-card-top">
+              <div>
+                <div class="camp-card-name">Myntra_SS26_Awareness_May26</div>
+                <div class="camp-card-meta">Awareness · Web + Mobile + CTV · 38.4L reach</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="cl-badge live">● Live</div>
+                <button class="btn btn-sm" onclick="showCampFlow()">View</button>
+              </div>
+            </div>
+            <div class="camp-card-stats">
+              <div class="cstat"><div class="cstat-val">14.2L</div><div class="cstat-lbl">Impressions</div></div>
+              <div class="cstat"><div class="cstat-val">₹2,96,400</div><div class="cstat-lbl">Spend</div></div>
+              <div class="cstat"><div class="cstat-val">37%</div><div class="cstat-lbl">Budget used</div></div>
+              <div class="cstat"><div class="cstat-val">Day 14/30</div><div class="cstat-lbl">Flight</div></div>
+              <div class="cstat"><div class="cstat-val">1.82%</div><div class="cstat-lbl">CTR</div></div>
+            </div>
+            <div class="camp-card-foot">
+              <div class="camp-aud-tag"><i class="ti ti-users" style="font-size:11px"></i> Fashion_Intenders_Broad</div>
+              <div class="camp-rails-tag"><i class="ti ti-adjustments-horizontal" style="font-size:11px"></i> Myntra_Premium_Web</div>
+              <div style="margin-left:auto;font-size:11px;color:#bbb">01 May – 30 May 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- UNDER APPROVAL -->
+        <div class="camp-status-group" id="csg-approval">
+          <div class="csg-label"><span class="csg-dot" style="background:#f59e0b"></span> Under approval</div>
+          <div class="camp-card">
+            <div class="camp-card-top">
+              <div>
+                <div class="camp-card-name">Hiveclothing_SS26_Retargeting_Jun26</div>
+                <div class="camp-card-meta">Awareness · Web + Mobile + DOOH + CTV · 4.21L MAIDs</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="cl-badge approval">Under review</div>
+                <button class="btn btn-sm" onclick="showCampFlow()">View</button>
+              </div>
+            </div>
+            <div class="camp-card-stats">
+              <div class="cstat"><div class="cstat-val">₹8,00,000</div><div class="cstat-lbl">Budget</div></div>
+              <div class="cstat"><div class="cstat-val">38L</div><div class="cstat-lbl">Target impressions</div></div>
+              <div class="cstat"><div class="cstat-val">30 days</div><div class="cstat-lbl">Flight length</div></div>
+              <div class="cstat"><div class="cstat-val">6 assets</div><div class="cstat-lbl">Creatives</div></div>
+              <div class="cstat"><div class="cstat-val">~4–8 hrs</div><div class="cstat-lbl">Est. approval</div></div>
+            </div>
+            <div class="camp-card-foot">
+              <div class="camp-aud-tag"><i class="ti ti-users" style="font-size:11px"></i> Hiveclothing_Summer_Retargeting</div>
+              <div class="camp-rails-tag"><i class="ti ti-adjustments-horizontal" style="font-size:11px"></i> Hiveclothing_Premium_Web</div>
+              <div style="margin-left:auto;font-size:11px;color:#bbb">01 Jun – 30 Jun 2026</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DRAFT -->
+        <div class="camp-status-group" id="csg-draft">
+          <div class="csg-label"><span class="csg-dot" style="background:#d0d0d0"></span> Draft</div>
+          <div class="camp-card">
+            <div class="camp-card-top">
+              <div>
+                <div class="camp-card-name">Hiveclothing_Winter26_CTV_Awareness</div>
+                <div class="camp-card-meta">Awareness · CTV + DOOH · Budget not set</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="cl-badge draft">Draft</div>
+                <button class="btn btn-primary btn-sm" onclick="showCampFlow()">Continue →</button>
+              </div>
+            </div>
+            <div class="camp-card-stats">
+              <div class="cstat"><div class="cstat-val" style="color:#bbb">—</div><div class="cstat-lbl">Budget</div></div>
+              <div class="cstat"><div class="cstat-val" style="color:#bbb">—</div><div class="cstat-lbl">Impressions</div></div>
+              <div class="cstat"><div class="cstat-val">Step 2/4</div><div class="cstat-lbl">Progress</div></div>
+              <div class="cstat"><div class="cstat-val" style="color:#bbb">—</div><div class="cstat-lbl">Flight</div></div>
+              <div class="cstat"><div class="cstat-val">2 days ago</div><div class="cstat-lbl">Last edited</div></div>
+            </div>
+            <div class="camp-card-foot">
+              <div class="camp-aud-tag"><i class="ti ti-users" style="font-size:11px"></i> Hiveclothing_Loyalty_Base</div>
+              <div style="margin-left:auto;font-size:11px;color:#bbb">Not submitted</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PUBLISHED -->
+        <div class="camp-status-group" id="csg-published">
+          <div class="csg-label"><span class="csg-dot" style="background:#6366f1"></span> Published</div>
+
+          <div class="camp-card" style="margin-bottom:10px">
+            <div class="camp-card-top">
+              <div>
+                <div class="camp-card-name">Hiveclothing_SS26_Discovery_Apr26</div>
+                <div class="camp-card-meta">Awareness · Web + Mobile + DOOH · Apr 2026 · Completed</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="cl-badge" style="background:#ede9fe;color:#5b21b6">Completed</div>
+                <button class="btn btn-sm" onclick="showCampFlow()">View report</button>
+                <button class="btn btn-primary btn-sm" onclick="startRetarget('Hiveclothing_SS26_Discovery_Apr26','Hiveclothing_Summer_Retargeting','4.21L MAIDs · Mumbai + Delhi · Fashion intenders',['Female-skew 60%','Age 22–38','Mobile-first'],'4.21L','91%')"><i class="ti ti-refresh"></i> Retarget</button>
+              </div>
+            </div>
+            <div class="camp-card-stats">
+              <div class="cstat"><div class="cstat-val">38.2L</div><div class="cstat-lbl">Total impressions</div></div>
+              <div class="cstat"><div class="cstat-val">₹7,84,000</div><div class="cstat-lbl">Total spend</div></div>
+              <div class="cstat"><div class="cstat-val">1.74%</div><div class="cstat-lbl">CTR</div></div>
+              <div class="cstat"><div class="cstat-val">98.4%</div><div class="cstat-lbl">DOOH proof-of-play</div></div>
+              <div class="cstat"><div class="cstat-val">4.21L</div><div class="cstat-lbl">MAIDs exported</div></div>
+            </div>
+            <div class="camp-card-foot">
+              <div class="camp-aud-tag"><i class="ti ti-users" style="font-size:11px"></i> Hiveclothing_Summer_Retargeting</div>
+              <div class="camp-rails-tag"><i class="ti ti-adjustments-horizontal" style="font-size:11px"></i> Hiveclothing_Premium_Web</div>
+              <div style="margin-left:auto;font-size:11px;color:#bbb">01 Apr – 30 Apr 2026</div>
+            </div>
+          </div>
+
+          <div class="camp-card">
+            <div class="camp-card-top">
+              <div>
+                <div class="camp-card-name">Hiveclothing_Loyalty_Base_Mar26</div>
+                <div class="camp-card-meta">Conversion · Mobile + CTV · Mar 2026 · Completed</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="cl-badge" style="background:#ede9fe;color:#5b21b6">Completed</div>
+                <button class="btn btn-sm" onclick="showCampFlow()">View report</button>
+                <button class="btn btn-primary btn-sm" onclick="startRetarget('Hiveclothing_Loyalty_Base_Mar26','Hiveclothing_Loyalty_Base','82K MAIDs · Pan-India · Existing customers',['All genders','Age 25–45','High LTV'],'82K','88%')"><i class="ti ti-refresh"></i> Retarget</button>
+              </div>
+            </div>
+            <div class="camp-card-stats">
+              <div class="cstat"><div class="cstat-val">6.8L</div><div class="cstat-lbl">Total impressions</div></div>
+              <div class="cstat"><div class="cstat-val">₹2,10,000</div><div class="cstat-lbl">Total spend</div></div>
+              <div class="cstat"><div class="cstat-val">2.31%</div><div class="cstat-lbl">CTR</div></div>
+              <div class="cstat"><div class="cstat-val">86%</div><div class="cstat-lbl">CTV completion</div></div>
+              <div class="cstat"><div class="cstat-val">82K</div><div class="cstat-lbl">MAIDs exported</div></div>
+            </div>
+            <div class="camp-card-foot">
+              <div class="camp-aud-tag"><i class="ti ti-users" style="font-size:11px"></i> Hiveclothing_Loyalty_Base</div>
+              <div class="camp-rails-tag"><i class="ti ti-adjustments-horizontal" style="font-size:11px"></i> Hiveclothing_CTV_DOOH_Rules</div>
+              <div style="margin-left:auto;font-size:11px;color:#bbb">01 Mar – 31 Mar 2026</div>
+            </div>
+          </div>
+        </div><!-- /csg-published -->
+
+      </div><!-- /campCards -->
+    </div>
+  </div><!-- /campList -->
+
+  <!-- CAMPAIGN FLOW (existing, hidden by default) -->
+  <div id="campFlow" style="display:none">
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-steps" id="progressSteps"></div>
+    <div class="pbar-line"><div class="pbar-fill" id="pbarFill" style="width:0%"></div></div>
+  </div>
+  <div class="camp-main">
+
+  <!-- STEP 0: PROMPT -->
+  <div class="screen active" id="screen-0">
+    <div class="prompt-screen">
+      <div class="prompt-logo">ADCP.</div>
+      <div class="prompt-headline">Describe your campaign. AI builds the plan.</div>
+      <div class="prompt-box-wrap">
+        <textarea class="prompt-box" id="promptInput" placeholder="e.g. Retargeting for Hiveclothing — users who saw our summer collection, ₹8L budget, 30 days, heavier on CTV and DOOH, Mumbai and Delhi only…" rows="3"></textarea>
+        <button class="prompt-submit" onclick="submitPrompt()"><i class="ti ti-arrow-up"></i></button>
+      </div>
+      <div class="prompt-hints">
+        <div class="prompt-hint" onclick="fillHint(0)">Retargeting past campaign</div>
+        <div class="prompt-hint" onclick="fillHint(1)">Brand awareness — all channels</div>
+        <div class="prompt-hint" onclick="fillHint(2)">CTV + DOOH, metro cities</div>
+        <div class="prompt-hint" onclick="fillHint(3)">Performance, mobile-first</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: AUDIENCE + CAMPAIGN SETUP -->
+  <div class="screen" id="screen-1">
+    <div class="screen-tag">Step 1 · Campaign & Audience</div>
+    <div class="screen-title">Campaign setup</div>
+    <div class="screen-sub">Name your campaign, set your objective and KPI, then pick an audience</div>
+    <div class="gen-bar" id="gen1"><div class="gen-spin"></div><div class="gen-txt">AI is reading your prompt and pre-filling the plan…</div></div>
+
+    <!-- retarget notice (shown when entering via Retarget button) -->
+    <div id="retargetNotice" style="display:none;align-items:center;gap:10px;background:#ede9fe;border:1px solid #c4b5fd;border-radius:9px;padding:11px 14px;margin-bottom:18px;font-size:12px;color:#4c1d95">
+      <i class="ti ti-refresh" style="font-size:15px;flex-shrink:0"></i>
+      <div><strong>Retargeting</strong> <span id="retargetNoticeSrc"></span> — audience pre-selected below. Fill in the remaining steps.</div>
+      <button class="btn btn-sm" style="margin-left:auto;border-color:#c4b5fd;color:#5b21b6;background:#fff;font-size:11px" onclick="document.getElementById('retargetNotice').style.display='none'">Dismiss</button>
+    </div>
+
+    <!-- campaign name + brand -->
+    <div class="fg2">
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Campaign name</span>
+          <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">A unique identifier for this campaign. Used in reports, MAID exports, and audience naming. AI suggests based on brand + objective + dates.</div></div>
+          <div class="spark-btn" onclick="spark('campname','Hiveclothing_SS26_Retargeting_Jun2026 — brand, collection, type, and month. Makes filtering in reports easy.')"><i class="ti ti-sparkles"></i></div>
+        </div>
+        <input class="editable-field" value="Hiveclothing_SS26_Retargeting_Jun26"/>
+        <div class="ai-suggestion" id="sug-campname"></div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Brand / Advertiser</span>
+          <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">The brand this campaign is running for. Used for audience matching and reporting segmentation.</div></div>
+        </div>
+        <input class="editable-field" value="Hiveclothing"/>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="section-label" style="display:flex;align-items:center;gap:8px">
+      Campaign objective & KPI
+      <div class="spark-btn" onclick="spark('kpi','For a retargeting campaign with a warm audience, Conversion is the strongest KPI — they already know the brand, now drive the action. Engagement works well if the creative is video-led.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-kpi" style="margin-bottom:10px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px">
+      <div class="kpi-card" id="kpi-conv" onclick="selKpi('conv')">
+        <div class="kpi-card-icon"><i class="ti ti-target"></i></div>
+        <div class="kpi-card-label">Conversion</div>
+        <div class="kpi-card-sub">Optimise toward purchase, sign-up or app install. Lower-funnel inventory prioritised.</div>
+      </div>
+      <div class="kpi-card sel" id="kpi-awareness" onclick="selKpi('awareness')">
+        <div class="kpi-card-icon"><i class="ti ti-eye"></i></div>
+        <div class="kpi-card-label">Awareness</div>
+        <div class="kpi-card-sub">Maximise unique reach and impressions. Broad, high-reach inventory, frequency capped.</div>
+      </div>
+      <div class="kpi-card" id="kpi-engagement" onclick="selKpi('engagement')">
+        <div class="kpi-card-icon"><i class="ti ti-heart"></i></div>
+        <div class="kpi-card-label">Engagement</div>
+        <div class="kpi-card-sub">Optimise toward CTR, video completions and dwell time. Quality placements weighted.</div>
+      </div>
+    </div>
+
+    <!-- audience picker -->
+    <div class="section-label" style="display:flex;align-items:center;gap:8px">
+      Select audience
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Audiences are built and saved in the Audience module. Select one here to use its MAID list, demographic filters, and segment definition.</div></div>
+      <div class="spark-btn" onclick="spark('aud-pick','Based on your prompt, Hiveclothing_Summer_Retargeting is the strongest match — 4.21L MAIDs, 91% match, female-skew fashion intenders in Mumbai + Delhi.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-aud-pick" style="margin-bottom:10px"></div>
+
+    <!-- selected audience preview (shown after selection) -->
+    <div class="selected-aud-preview" id="selAudPreview">
+      <div class="sap-header">
+        <div class="sap-name" id="sapName">—</div>
+        <div class="sap-change" onclick="clearAudSelection()">Change audience</div>
+      </div>
+      <div class="sap-tags" id="sapTags"></div>
+      <div class="sap-stats">
+        <div class="sap-stat"><strong id="sapMAIDs">—</strong> MAIDs</div>
+        <div class="sap-stat"><strong id="sapMatch">—</strong> match rate</div>
+        <div class="sap-stat"><strong id="sapChannels">—</strong> channels reachable</div>
+      </div>
+    </div>
+
+    <div id="audPickerCards">
+      <div class="aud-pick-grid">
+        <div class="aud-pick-card" id="ap-1" onclick="pickAud('ap-1','Hiveclothing_Summer_Retargeting','4.21L MAIDs · Mumbai + Delhi · Fashion intenders',['Female-skew 60%','Age 22–38','Mobile-first'],'4.21L','91%','4')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Hiveclothing_Summer_Retargeting</div>
+          <div class="aud-pick-sub">4.21L MAIDs · Mumbai + Delhi · Fashion intenders</div>
+          <div class="aud-pick-tags"><span class="tag blue">Female-skew 60%</span><span class="tag blue">Age 22–38</span><span class="tag blue">Mobile-first</span></div>
+          <div class="aud-pick-meta">Updated 3 days ago · 91% match rate</div>
+        </div>
+        <div class="aud-pick-card" id="ap-2" onclick="pickAud('ap-2','Hiveclothing_Loyalty_Base','82K MAIDs · Pan-India · Existing customers',['All genders','Age 25–45','High LTV'],'82K','88%','4')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Hiveclothing_Loyalty_Base</div>
+          <div class="aud-pick-sub">82K MAIDs · Pan-India · Existing customers</div>
+          <div class="aud-pick-tags"><span class="tag blue">All genders</span><span class="tag blue">Age 25–45</span><span class="tag blue">High LTV</span></div>
+          <div class="aud-pick-meta">Updated 8 days ago · 88% match rate</div>
+        </div>
+        <div class="aud-pick-card" id="ap-3" onclick="pickAud('ap-3','Fashion_Intenders_Broad','18.4L MAIDs · Top 6 metros · Category-level',['Mixed gender','Age 18–40','Broad reach'],'18.4L','84%','4')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Fashion_Intenders_Broad</div>
+          <div class="aud-pick-sub">18.4L MAIDs · Top 6 metros · Category-level</div>
+          <div class="aud-pick-tags"><span class="tag blue">Mixed gender</span><span class="tag blue">Age 18–40</span><span class="tag blue">Broad reach</span></div>
+          <div class="aud-pick-meta">Updated 12 days ago · 84% match rate</div>
+        </div>
+        <div class="new-aud-card" onclick="switchTab('aud');startAudBuilder()">
+          <i class="ti ti-plus" style="font-size:18px"></i>
+          <span>Create new audience</span>
+          <span style="font-size:11px;color:#aaa;font-weight:400">Opens Audience module</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(0)">← Back to prompt</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Set reach & budget <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 2: REACH + BUDGET -->
+  <div class="screen" id="screen-2">
+    <div class="screen-tag">Step 2 · Reach & Budget</div>
+    <div class="screen-title">Reach, budget + channels</div>
+    <div class="screen-sub">Toggle channels on or off — budget auto-rebalances across active channels</div>
+
+    <div class="fg2" style="margin-bottom:16px">
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Total budget (₹)</span>
+          <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Total rupee spend for this campaign. Distributed across active channels. Removing a channel redistributes its budget proportionally.</div></div>
+          <div class="spark-btn" onclick="spark('totbud','For 30-day retargeting at this audience size, ₹8–10L is optimal. Below ₹5L, frequency drops too low for meaningful brand recall.')"><i class="ti ti-sparkles"></i></div>
+        </div>
+        <input class="editable-field" value="₹8,00,000"/>
+        <div class="ai-suggestion" id="sug-totbud"></div>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label-row">
+          <span class="flabel">Flight dates</span>
+          <div class="spark-btn" onclick="spark('dates','30-day flight is optimal for this budget — 4–6 exposures per user before diminishing returns. Start 01 Jun gives 3 days for creative trafficking.')"><i class="ti ti-sparkles"></i></div>
+        </div>
+        <div class="field-box filled" style="gap:8px"><span>01 Jun 2026</span><span style="color:#bbb">→</span><span>30 Jun 2026</span></div>
+        <div class="ai-suggestion" id="sug-dates"></div>
+      </div>
+    </div>
+
+    <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span>Channel allocation — reach + budget</span>
+      <div class="spark-btn" onclick="spark('alloc','CTV+DOOH brief: CTV 30% · DOOH 30% · Mobile 25% · Web 15%. Weighted to your brief while keeping mobile strong for MAID retargeting.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-alloc" style="margin-bottom:10px"></div>
+    <div class="rebalance-note"><i class="ti ti-info-circle" style="font-size:14px;color:#0050c8;flex-shrink:0"></i>Toggle a channel off to remove it — its budget redistributes to unlocked active channels. Lock a row to protect its value.</div>
+
+    <div class="ch-table">
+      <div class="ch-row hdr"><span></span><span>Channel</span><span>Est. reach / mo</span><span>Budget (₹)</span><span>% total</span><span>Lock</span><span></span></div>
+      <div class="ch-row" id="chrow-web">
+        <div class="ch-toggle on" id="chtog-web" onclick="toggleCh('web')"></div>
+        <span style="font-size:13px;font-weight:600">Web</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">18.2L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:82%"></div></div></div>
+        <input class="budget-input" id="b-web" value="1,20,000"/>
+        <input class="budget-input" id="p-web" value="15%"/>
+        <div class="lock-btn" id="lock-web" onclick="toggleLock('web')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bweb','Web at 15% is lean but appropriate given your CTV+DOOH focus — broad reach safety net without cannibalising premium channels.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="ch-row" id="chrow-mobile">
+        <div class="ch-toggle on" id="chtog-mobile" onclick="toggleCh('mobile')"></div>
+        <span style="font-size:13px;font-weight:600">Mobile / App</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">12.6L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:60%"></div></div></div>
+        <input class="budget-input" id="b-mobile" value="2,00,000"/>
+        <input class="budget-input" id="p-mobile" value="25%"/>
+        <div class="lock-btn" id="lock-mobile" onclick="toggleLock('mobile')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bmobile','Mobile at 25% is strong — your audience is mobile-first and MAID match rate is highest here. Lowest CPM in your mix.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="ch-row" id="chrow-dooh">
+        <div class="ch-toggle on" id="chtog-dooh" onclick="toggleCh('dooh')"></div>
+        <span style="font-size:13px;font-weight:600">DOOH</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">5.8L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:28%"></div></div></div>
+        <input class="budget-input" id="b-dooh" value="2,40,000"/>
+        <input class="budget-input" id="p-dooh" value="30%"/>
+        <div class="lock-btn" id="lock-dooh" onclick="toggleLock('dooh')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bdooh','DOOH at 30% matches your brief. Mumbai + Delhi premium mall and metro screens have strongest overlap with your audience. Proof-of-play included.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+      <div class="ch-row" id="chrow-ctv">
+        <div class="ch-toggle on" id="chtog-ctv" onclick="toggleCh('ctv')"></div>
+        <span style="font-size:13px;font-weight:600">CTV</span>
+        <div><div style="font-size:12px;color:#555;margin-bottom:4px">1.8L impr</div><div style="height:4px;background:#f0f0f0;border-radius:2px;width:110px"><div style="height:4px;background:#0050c8;border-radius:2px;width:10%"></div></div></div>
+        <input class="budget-input" id="b-ctv" value="2,40,000"/>
+        <input class="budget-input" id="p-ctv" value="30%"/>
+        <div class="lock-btn" id="lock-ctv" onclick="toggleLock('ctv')"><i class="ti ti-lock-open"></i></div>
+        <div class="spark-btn" onclick="spark('bctv','CTV at 30% delivers high-impact pre-roll to your retargeting audience on JioCinema and Hotstar. Highest CPM but strongest brand recall signal.')"><i class="ti ti-sparkles"></i></div>
+      </div>
+    </div>
+    <div class="budget-total-row"><span style="font-size:12px;color:#666">Channel total</span><span class="btotal-ok">₹8,00,000 · matches total ✓</span></div>
+
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Upload creatives <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 3: CREATIVES -->
+  <div class="screen" id="screen-3">
+    <div class="screen-tag">Step 3 · Creatives</div>
+    <div class="screen-title">Upload creatives</div>
+    <div class="screen-sub">Upload new assets or select from your <span style="color:#0050c8;cursor:pointer;text-decoration:underline" onclick="switchTab('creatives')">Creative library</span> — publisher rules in <span style="color:#0050c8;cursor:pointer;text-decoration:underline" onclick="switchTab('rails')">Rails</span></div>
+
+    <div class="channel-grid">
+
+      <!-- WEB -->
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>Web<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cweb','300×250 and 728×90 are your highest-performing web formats for fashion retargeting. Banner_A (lifestyle model) outperforms flat lay — use it as primary.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">300×250 · 728×90 · 160×600</div>
+        <!-- selected assets -->
+        <div class="crv-selected-list" id="csel-web">
+          <div class="crv-sel-item"><div class="crv-sel-thumb" style="background:linear-gradient(135deg,#f5f0ff,#e0d5ff)"><i class="ti ti-photo" style="font-size:12px;color:#7c3aed"></i></div><div class="crv-sel-name">Banner_A_Lifestyle.jpg</div><div class="crv-sel-dim">300×250</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span></div>
+          <div class="crv-sel-item"><div class="crv-sel-thumb" style="background:linear-gradient(135deg,#f0f5ff,#d5e5ff)"><i class="ti ti-photo" style="font-size:12px;color:#0050c8"></i></div><div class="crv-sel-name">Leaderboard_728.jpg</div><div class="crv-sel-dim">728×90</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span></div>
+        </div>
+        <div class="crv-add-row">
+          <div class="crv-upload-btn" onclick="fakeAddAsset('csel-web','web')"><i class="ti ti-upload" style="font-size:11px"></i> Upload</div>
+          <div class="crv-library-btn" onclick="openLibraryPicker('csel-web','web')"><i class="ti ti-photo" style="font-size:11px"></i> Choose from library</div>
+        </div>
+        <!-- inline library picker (hidden) -->
+        <div class="crv-inline-picker" id="cpick-web" style="display:none">
+          <div class="cip-header"><span>Select from library — Web compatible</span><span class="cip-close" onclick="closeLibraryPicker('web')">✕</span></div>
+          <div class="cip-grid">
+            <div class="cip-item" onclick="selectLibAsset('csel-web','Banner_A_Lifestyle.jpg','300×250','#f5f0ff','#7c3aed','cpick-web')"><div class="cip-thumb" style="background:linear-gradient(135deg,#f5f0ff,#e0d5ff)"><i class="ti ti-photo" style="font-size:14px;color:#7c3aed"></i></div><div class="cip-name">Banner_A_Lifestyle.jpg</div><div class="cip-dim">300×250</div></div>
+            <div class="cip-item" onclick="selectLibAsset('csel-web','Banner_B_Product.jpg','300×250','#fff5f0','#c2410c','cpick-web')"><div class="cip-thumb" style="background:linear-gradient(135deg,#fff5f0,#ffe0d0)"><i class="ti ti-photo" style="font-size:14px;color:#c2410c"></i></div><div class="cip-name">Banner_B_Product.jpg</div><div class="cip-dim">300×250</div></div>
+            <div class="cip-item" onclick="selectLibAsset('csel-web','Leaderboard_728.jpg','728×90','#f0f5ff','#0050c8','cpick-web')"><div class="cip-thumb" style="background:linear-gradient(135deg,#f0f5ff,#d5e5ff)"><i class="ti ti-photo" style="font-size:14px;color:#0050c8"></i></div><div class="cip-name">Leaderboard_728.jpg</div><div class="cip-dim">728×90</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOBILE -->
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>Mobile / App<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cmob','Interstitial format drives 3× higher CTR for fashion retargeting on mobile. Ensure creative is portrait 9:16 for full-screen delivery.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">320×50 · 300×250 · interstitial</div>
+        <div class="crv-selected-list" id="csel-mobile">
+          <div class="crv-sel-item"><div class="crv-sel-thumb" style="background:linear-gradient(135deg,#f0fff5,#d5ffe5)"><i class="ti ti-photo" style="font-size:12px;color:#065f46"></i></div><div class="crv-sel-name">Interstitial_Full.jpg</div><div class="crv-sel-dim">320×480</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span></div>
+        </div>
+        <div class="crv-add-row">
+          <div class="crv-upload-btn" onclick="fakeAddAsset('csel-mobile','mobile')"><i class="ti ti-upload" style="font-size:11px"></i> Upload</div>
+          <div class="crv-library-btn" onclick="openLibraryPicker('csel-mobile','mobile')"><i class="ti ti-photo" style="font-size:11px"></i> Choose from library</div>
+        </div>
+        <div class="crv-inline-picker" id="cpick-mobile" style="display:none">
+          <div class="cip-header"><span>Select from library — Mobile compatible</span><span class="cip-close" onclick="closeLibraryPicker('mobile')">✕</span></div>
+          <div class="cip-grid">
+            <div class="cip-item" onclick="selectLibAsset('csel-mobile','Banner_A_Lifestyle.jpg','300×250','#f5f0ff','#7c3aed','cpick-mobile')"><div class="cip-thumb" style="background:linear-gradient(135deg,#f5f0ff,#e0d5ff)"><i class="ti ti-photo" style="font-size:14px;color:#7c3aed"></i></div><div class="cip-name">Banner_A_Lifestyle.jpg</div><div class="cip-dim">300×250</div></div>
+            <div class="cip-item" onclick="selectLibAsset('csel-mobile','Interstitial_Full.jpg','320×480','#f0fff5','#065f46','cpick-mobile')"><div class="cip-thumb" style="background:linear-gradient(135deg,#f0fff5,#d5ffe5)"><i class="ti ti-photo" style="font-size:14px;color:#065f46"></i></div><div class="cip-name">Interstitial_Full.jpg</div><div class="cip-dim">320×480</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOOH -->
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>DOOH<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cdooh','Full-motion 1920×1080 at 10–15 seconds optimal for DOOH retargeting. Logo and CTA in first 3 seconds for outdoor viewing distance.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">1920×1080 · 16:9 full-motion</div>
+        <div class="crv-selected-list" id="csel-dooh">
+          <div class="crv-sel-item"><div class="crv-sel-thumb" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"><i class="ti ti-video" style="font-size:12px;color:#fff;opacity:.7"></i></div><div class="crv-sel-name">OOH_Summer_16s.mp4</div><div class="crv-sel-dim">1920×1080 · 0:16</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span></div>
+        </div>
+        <div class="crv-add-row">
+          <div class="crv-upload-btn" onclick="fakeAddAsset('csel-dooh','dooh')"><i class="ti ti-upload" style="font-size:11px"></i> Upload</div>
+          <div class="crv-library-btn" onclick="openLibraryPicker('csel-dooh','dooh')"><i class="ti ti-photo" style="font-size:11px"></i> Choose from library</div>
+        </div>
+        <div class="crv-inline-picker" id="cpick-dooh" style="display:none">
+          <div class="cip-header"><span>Select from library — DOOH compatible</span><span class="cip-close" onclick="closeLibraryPicker('dooh')">✕</span></div>
+          <div class="cip-grid">
+            <div class="cip-item" onclick="selectLibAsset('csel-dooh','OOH_Summer_16s.mp4','1920×1080 · 0:16','#1a1a2e','#fff','cpick-dooh')"><div class="cip-thumb" style="background:linear-gradient(135deg,#1a1a2e,#16213e)"><i class="ti ti-video" style="font-size:14px;color:#fff;opacity:.7"></i></div><div class="cip-name">OOH_Summer_16s.mp4</div><div class="cip-dim">0:16 · 8.4 MB</div></div>
+            <div class="cip-item" onclick="selectLibAsset('csel-dooh','Myntra_SS26_10s.mp4','1920×1080 · 0:10','#0f0c29','#fff','cpick-dooh')"><div class="cip-thumb" style="background:linear-gradient(135deg,#0f0c29,#302b63)"><i class="ti ti-video" style="font-size:14px;color:#fff;opacity:.7"></i></div><div class="cip-name">Myntra_SS26_10s.mp4</div><div class="cip-dim">0:10 · 6.1 MB</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTV -->
+      <div class="channel-card on">
+        <div class="channel-name"><div class="check-dot"><i class="ti ti-check"></i></div>CTV<div class="spark-btn" style="margin-left:auto;width:18px;height:18px;font-size:10px" onclick="spark('cctv','15s pre-roll outperforms 30s for retargeting — audience already knows the brand. VAST 4.0 required for JioCinema and Hotstar.')"><i class="ti ti-sparkles"></i></div></div>
+        <div class="channel-sub">VAST 4.0 · 15s / 30s pre-roll</div>
+        <div class="crv-selected-list" id="csel-ctv">
+          <div class="crv-sel-item"><div class="crv-sel-thumb" style="background:#eef2ff;border:1px solid #c0cfe8"><i class="ti ti-link" style="font-size:12px;color:#0050c8"></i></div><div class="crv-sel-name">VAST_CTV_15s_Hiveclothing</div><div class="crv-sel-dim">VAST 4.0 · 15s</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span></div>
+        </div>
+        <div class="crv-add-row">
+          <div class="crv-upload-btn" onclick="fakeAddAsset('csel-ctv','ctv')"><i class="ti ti-link" style="font-size:11px"></i> Add VAST URL</div>
+          <div class="crv-library-btn" onclick="openLibraryPicker('csel-ctv','ctv')"><i class="ti ti-photo" style="font-size:11px"></i> Choose from library</div>
+        </div>
+        <div class="crv-inline-picker" id="cpick-ctv" style="display:none">
+          <div class="cip-header"><span>Select from library — CTV compatible</span><span class="cip-close" onclick="closeLibraryPicker('ctv')">✕</span></div>
+          <div class="cip-grid">
+            <div class="cip-item" onclick="selectLibAsset('csel-ctv','VAST_CTV_15s_Hiveclothing','VAST 4.0 · 15s','#eef2ff','#0050c8','cpick-ctv','vast')"><div class="cip-thumb" style="background:#eef2ff;border:1px solid #c0cfe8"><i class="ti ti-link" style="font-size:14px;color:#0050c8"></i></div><div class="cip-name">VAST_CTV_15s_Hiveclothing</div><div class="cip-dim">15s pre-roll</div></div>
+            <div class="cip-item" onclick="selectLibAsset('csel-ctv','VAST_CTV_30s_Myntra','VAST 4.0 · 30s','#eef2ff','#0050c8','cpick-ctv','vast')"><div class="cip-thumb" style="background:#eef2ff;border:1px solid #c0cfe8"><i class="ti ti-link" style="font-size:14px;color:#0050c8"></i></div><div class="cip-name">VAST_CTV_30s_Myntra</div><div class="cip-dim">30s pre-roll</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Rails picker -->
+    <div class="section-label" style="display:flex;align-items:center;gap:8px;margin-top:4px">
+      Rails config
+      <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Rails define publisher allowlists, blocklists, DOOH zone rules and CTV genre restrictions. Configure them once in the Rails module and reuse across campaigns.</div></div>
+      <div class="spark-btn" onclick="spark('rails-pick','Hiveclothing_Premium_Web is your strongest rails config — allowlists Mint, Vogue, ET Style and blocks gaming + low-quality inventory. Recommended for this campaign.')"><i class="ti ti-sparkles"></i></div>
+    </div>
+    <div class="ai-suggestion" id="sug-rails-pick" style="margin-bottom:10px"></div>
+
+    <div id="railsPickerCards">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+        <div class="aud-pick-card" id="rp-1" onclick="pickRails('rp-1','Hiveclothing_Premium_Web')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Hiveclothing_Premium_Web</div>
+          <div class="aud-pick-sub">Web + Mobile · Allowlist: Mint, ET, Vogue, Femina · Block: gaming, low-quality</div>
+          <div class="aud-pick-tags"><span class="tag blue">Web</span><span class="tag blue">Mobile</span><span class="tag blue">3 allowlists</span><span class="tag blue">2 blocklists</span></div>
+          <div class="aud-pick-meta">Updated 5 days ago</div>
+        </div>
+        <div class="aud-pick-card" id="rp-2" onclick="pickRails('rp-2','Hiveclothing_CTV_DOOH_Rules')">
+          <div class="aud-pick-check"><i class="ti ti-check"></i></div>
+          <div class="aud-pick-name">Hiveclothing_CTV_DOOH_Rules</div>
+          <div class="aud-pick-sub">CTV + DOOH · JioCinema + Hotstar · Premium malls + metro · Block: cricket, highway</div>
+          <div class="aud-pick-tags"><span class="tag blue">CTV</span><span class="tag blue">DOOH</span><span class="tag blue">Drama/Lifestyle</span></div>
+          <div class="aud-pick-meta">Updated 5 days ago</div>
+        </div>
+        <div class="new-aud-card" style="min-height:80px" onclick="switchTab('rails')">
+          <i class="ti ti-plus" style="font-size:16px"></i>
+          <span>Create rails config</span>
+          <span style="font-size:11px;color:#aaa;font-weight:400">Opens Rails module</span>
+        </div>
+      </div>
+      <div id="railsSelectedPreview" style="display:none;background:#f5f8ff;border:1px solid #c0cfe8;border-radius:10px;padding:12px 16px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:13px;font-weight:700;color:#0050c8" id="railsSelName">—</div>
+          <div style="font-size:11px;color:#888;cursor:pointer;text-decoration:underline" onclick="clearRailsSelection()">Change</div>
+        </div>
+        <div style="font-size:11px;color:#6a8fc8">Publisher rules and targeting constraints from this config will apply to all channels in this campaign.</div>
+      </div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn btn-primary btn-lg" onclick="goTo(4)">Submit for approval <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 4: SUBMITTED -->
+  <div class="screen" id="screen-4">
+    <div class="submit-wrap">
+      <div class="submit-icon"><i class="ti ti-circle-check"></i></div>
+      <div class="submit-title">Campaign submitted for approval</div>
+      <div class="submit-sub">Your campaign has been configured and sent for review.<br>It will go live automatically once approved by your team.</div>
+      <div class="submit-status"><i class="ti ti-clock" style="font-size:14px"></i> Under review · Typically approved within 4–8 hours</div>
+      <div class="submit-summary">
+        <div class="submit-row"><span class="submit-key">Campaign</span><span class="submit-val">Hiveclothing_SS26_Retargeting_Jun26</span></div>
+        <div class="submit-row"><span class="submit-key">Audience</span><span class="submit-val" id="submitAudName">Hiveclothing_Summer_Retargeting · 4.21L MAIDs</span></div>
+        <div class="submit-row"><span class="submit-key">KPI</span><span class="submit-val" id="submitKPI">Awareness</span></div>
+        <div class="submit-row"><span class="submit-key">Channels</span><span class="submit-val">Web · Mobile · DOOH · CTV</span></div>
+        <div class="submit-row"><span class="submit-key">Total budget</span><span class="submit-val">₹8,00,000</span></div>
+        <div class="submit-row"><span class="submit-key">Flight</span><span class="submit-val">01 Jun – 30 Jun 2026 · 30 days</span></div>
+        <div class="submit-row"><span class="submit-key">Creatives</span><span class="submit-val">6 assets across 4 channels</span></div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn" onclick="showCampList()"><i class="ti ti-layout-list"></i> All campaigns</button>
+        <button class="btn btn-primary" onclick="showCampFlow()"><i class="ti ti-plus"></i> New campaign</button>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /camp-main -->
+  </div><!-- /campFlow -->
+</div><!-- /camp-view -->
+
+<!-- ════════════════════════════════
+     AUDIENCE VIEW
+════════════════════════════════ -->
+<div class="view" id="aud-view">
+<div class="aud-view-inner">
+
+  <!-- AUDIENCE LIST / ENTRY -->
+  <div class="aud-entry" id="audEntry">
+    <div class="aud-entry-inner">
+      <div class="aud-entry-top">
+        <div>
+          <div class="aud-entry-title">Audiences</div>
+          <div class="aud-entry-sub">Saved audiences reusable across any campaign</div>
+        </div>
+        <button class="btn btn-primary" onclick="startAudBuilder()"><i class="ti ti-plus"></i> New audience</button>
+      </div>
+      <div class="saved-aud-grid">
+        <div class="saved-card">
+          <div class="saved-card-name">Hiveclothing_Summer_Retargeting</div>
+          <div class="saved-card-sub">4.21L MAIDs · Mumbai + Delhi · Fashion intenders</div>
+          <div class="saved-card-tags"><span class="tag blue">Female-skew 60%</span><span class="tag blue">Age 22–38</span><span class="tag blue">91% match</span></div>
+          <div class="saved-card-meta" style="display:flex;align-items:center;justify-content:space-between">
+            <span><i class="ti ti-clock" style="font-size:10px"></i> Updated 3 days ago</span>
+            <button class="btn btn-primary btn-sm" onclick="startRetarget('','Hiveclothing_Summer_Retargeting','4.21L MAIDs · Mumbai + Delhi · Fashion intenders',['Female-skew 60%','Age 22–38','Mobile-first'],'4.21L','91%')"><i class="ti ti-refresh" style="font-size:11px"></i> Retarget</button>
+          </div>
+        </div>
+        <div class="saved-card">
+          <div class="saved-card-name">Hiveclothing_Loyalty_Base</div>
+          <div class="saved-card-sub">82K MAIDs · Pan-India · Existing customers</div>
+          <div class="saved-card-tags"><span class="tag blue">All genders</span><span class="tag blue">Age 25–45</span><span class="tag blue">88% match</span></div>
+          <div class="saved-card-meta" style="display:flex;align-items:center;justify-content:space-between">
+            <span><i class="ti ti-clock" style="font-size:10px"></i> Updated 8 days ago</span>
+            <button class="btn btn-primary btn-sm" onclick="startRetarget('','Hiveclothing_Loyalty_Base','82K MAIDs · Pan-India · Existing customers',['All genders','Age 25–45','High LTV'],'82K','88%')"><i class="ti ti-refresh" style="font-size:11px"></i> Retarget</button>
+          </div>
+        </div>
+        <div class="saved-card">
+          <div class="saved-card-name">Fashion_Intenders_Broad</div>
+          <div class="saved-card-sub">18.4L MAIDs · Top 6 metros · Category-level</div>
+          <div class="saved-card-tags"><span class="tag blue">Mixed gender</span><span class="tag blue">Age 18–40</span><span class="tag blue">84% match</span></div>
+          <div class="saved-card-meta" style="display:flex;align-items:center;justify-content:space-between">
+            <span><i class="ti ti-clock" style="font-size:10px"></i> Updated 12 days ago</span>
+            <button class="btn btn-primary btn-sm" onclick="startRetarget('','Fashion_Intenders_Broad','18.4L MAIDs · Top 6 metros · Category-level',['Mixed gender','Age 18–40','Broad reach'],'18.4L','84%')"><i class="ti ti-refresh" style="font-size:11px"></i> Retarget</button>
+          </div>
+        </div>
+        <div class="new-saved-card" onclick="startAudBuilder()">
+          <i class="ti ti-plus" style="font-size:20px"></i>
+          <span>New audience</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIENCE BUILDER -->
+  <div class="aud-builder" id="audBuilder">
+    <div class="aud-builder-left">
+
+      <!-- builder header -->
+      <div id="audBuilderHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#111" id="audBuilderTitle">Build your audience</div>
+          <div style="font-size:13px;color:#888;margin-top:2px" id="audBuilderSub">Choose a data source to get started</div>
+        </div>
+        <button class="btn btn-sm" onclick="showPathChooser()"><i class="ti ti-arrow-left"></i> Back</button>
+      </div>
+
+      <!-- CONTINUOUS SCROLL FORM (shown directly, no path chooser) -->
+      <div id="audScrollForm" style="display:none">
+        <div id="audAnchorNav" style="position:sticky;top:48px;z-index:100;background:#fff;border-bottom:1px solid #f0f0f0;margin:0 -28px 24px;padding:0 28px;display:flex;align-items:center;gap:0;overflow-x:auto">
+          <div class="anav-item active" id="anav-source" onclick="scrollToSec('sec-source')">Data source</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-geo" onclick="scrollToSec('sec-geo')">Geography</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-demo" onclick="scrollToSec('sec-demo')">Demographics</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-device" onclick="scrollToSec('sec-device')">Device</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-interests" onclick="scrollToSec('sec-interests')">Interests</div>
+          <div class="anav-sep">›</div>
+          <div class="anav-item" id="anav-name" onclick="scrollToSec('sec-name')">Name & save</div>
+        </div>
+
+        <div id="fpResolvedCard" style="display:none;margin-bottom:20px">
+          <div class="inferred-card">
+            <div class="inf-header"><div class="inf-icon"><i class="ti ti-sparkles" style="font-size:13px"></i></div><div><div class="inf-title">4,21,800 MAIDs matched · 91% match rate</div><div class="inf-sub">Inferred from device signals, app usage and location data</div></div></div>
+            <div class="inf-tags"><span class="inf-tag">Female-skew · 30%F / 70%M</span><span class="inf-tag">Age 22–38 peak</span><span class="inf-tag">Mumbai + Delhi</span><span class="inf-tag">Mobile-first</span><span class="inf-tag">Mid-premium income</span><span class="inf-tag">Fashion + lifestyle apps active</span></div>
+            <div class="inf-note">Base pool: 4.21L devices. Scroll down to apply filters and narrow your audience.</div>
+          </div>
+        </div>
+
+        <!-- SOURCE -->
+        <div class="form-section" id="sec-source">
+          <div class="fsec-header"><div class="fsec-num done" id="fnum-source"><i class="ti ti-check" style="font-size:10px"></i></div><div class="fsec-title">Data source</div><div class="fsec-badge" id="fbadge-source"></div><div class="fsec-toggle" onclick="toggleSec('source')"><i class="ti ti-chevron-up" id="ftog-source"></i></div></div>
+          <div class="fsec-body" id="fbody-source">
+            <div id="fp-source-body">
+              <div class="aud-field-mb">
+                <div class="aud-flabel">MAIDs <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Mobile Advertising IDs. Upload a .csv with one MAID per row.</div></div></div>
+                <div id="maid-done" style="display:none" class="aud-upload-done"><i class="ti ti-circle-check"></i><span>4,21,800 MAIDs loaded</span><span style="margin-left:auto;font-size:11px;color:#999;cursor:pointer" onclick="resetAudUp('maid')">Remove</span></div>
+                <div id="maid-zone" class="aud-upload-zone" onclick="fakeAudUp('maid','4,21,800 MAIDs loaded')"><div class="aud-upload-icon"><i class="ti ti-file-upload"></i></div><div class="aud-upload-label"><strong>Click to upload</strong> or drop .csv · One MAID per row</div></div>
+              </div>
+              <div class="aud-field-mb">
+                <div class="aud-flabel">Lat-longs <div class="spark-btn" onclick="spark('aud-ll','BKC, Bandra West, South Mumbai, Connaught Place, Saket — premium footfall zones for fashion audiences.')"><i class="ti ti-sparkles"></i></div></div>
+                <div id="ll-done" style="display:none" class="aud-upload-done"><i class="ti ti-circle-check"></i><span>3 zones loaded</span><span style="margin-left:auto;font-size:11px;color:#999;cursor:pointer" onclick="resetAudUp('ll')">Remove</span></div>
+                <div id="ll-zone" class="aud-upload-zone" onclick="fakeAudUp('ll','3 zones loaded')"><div class="aud-upload-icon"><i class="ti ti-map-pin"></i></div><div class="aud-upload-label"><strong>Click to upload</strong> coordinates · Platform resolves audience from location signals</div></div>
+                <div class="ai-suggestion" id="sug-aud-ll"></div>
+              </div>
+              <div class="aud-field-mb">
+                <div class="aud-flabel">Or import from past campaign <div class="spark-btn" onclick="spark('aud-pc','Hiveclothing_SS26_Discovery_Apr26 — most recent, 4.21L MAIDs, 91% match.')"><i class="ti ti-sparkles"></i></div></div>
+                <select class="aud-input" onchange="if(this.value){document.getElementById('fpResolvedCard').style.display='block';animRp('4.21L');document.getElementById('rpLbl').textContent='MAIDs matched · 91% match rate';document.getElementById('rpGenderBreak').style.display='block';document.getElementById('rpChBreak').style.display='block';}"><option value="">Select campaign…</option><option>Hiveclothing_SS26_Discovery_Apr26 — 4.21L MAIDs</option><option>Hiveclothing_Loyalty_Base_Mar26 — 82K MAIDs</option></select>
+                <div class="ai-suggestion" id="sug-aud-pc"></div>
+              </div>
+            </div>
+            <div id="plat-source-body" style="display:none">
+              <div style="background:#f5f8ff;border:1px solid #c0cfe8;border-radius:9px;padding:14px 16px;"><div style="font-size:12px;font-weight:700;color:#0050c8;margin-bottom:4px;display:flex;align-items:center;gap:5px"><i class="ti ti-database" style="font-size:13px"></i> Building from ADCP platform graph</div><div style="font-size:11px;color:#6a8fc8;line-height:1.5">420M+ device profiles across web, app, CTV and DOOH. Define your audience by geography and filters below — no upload needed.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GEOGRAPHY -->
+        <div class="form-section" id="sec-geo">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-geo">2</div><div class="fsec-title">Geography</div><div class="fsec-badge"><span id="geo-summary">Mumbai + Delhi</span></div><div class="fsec-toggle" onclick="toggleSec('geo')"><i class="ti ti-chevron-up" id="ftog-geo"></i></div></div>
+          <div class="fsec-body" id="fbody-geo">
+            <div id="fp-geo-note" style="font-size:12px;color:#888;padding-bottom:10px">Geography inferred from your uploaded lat-longs and pincodes. Add cities to expand coverage.</div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">City or pincode <div class="spark-btn" onclick="spark('aud-geo','For fashion: Mumbai and Delhi primary. Bangalore + Pune add volume with similar demographic profile.')"><i class="ti ti-sparkles"></i></div></div>
+              <div style="position:relative"><input class="aud-input" placeholder="Search city or pincode…"/><i class="ti ti-search" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#bbb;font-size:12px;pointer-events:none"></i></div>
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px" id="geoTagsScroll">
+                <div class="geo-tag">Mumbai <span class="geo-tag-x" onclick="this.parentElement.remove()">✕</span></div>
+                <div class="geo-tag">Delhi NCR <span class="geo-tag-x" onclick="this.parentElement.remove()">✕</span></div>
+              </div>
+              <div class="quick-geos"><div class="quick-geo" onclick="addQuickGeo(this,'Bangalore')">+ Bangalore</div><div class="quick-geo" onclick="addQuickGeo(this,'Pune')">+ Pune</div><div class="quick-geo" onclick="addQuickGeo(this,'Hyderabad')">+ Hyderabad</div><div class="quick-geo" onclick="addQuickGeo(this,'Chennai')">+ Chennai</div><div class="quick-geo" onclick="addQuickGeo(this,'Kolkata')">+ Kolkata</div></div>
+              <div class="ai-suggestion" id="sug-aud-geo"></div>
+            </div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">City tier</div>
+              <div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Tier 1 metros</div><div class="chip" onclick="this.classList.toggle('sel')">Tier 2</div><div class="chip" onclick="this.classList.toggle('sel')">Tier 3</div><div class="chip" onclick="this.classList.toggle('sel')">Pan India</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEMOGRAPHICS -->
+        <div class="form-section" id="sec-demo">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-demo">3</div><div class="fsec-title">Demographics</div><div class="fsec-badge"><span id="demo-summary">All genders · 22–45 · Mid + Premium</span></div><div class="fsec-toggle" onclick="toggleSec('demo')"><i class="ti ti-chevron-up" id="ftog-demo"></i></div></div>
+          <div class="fsec-body" id="fbody-demo">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Gender <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Inferred from device signals and app usage patterns.</div></div></div>
+              <div class="gender-grid">
+                <div class="gender-card sel" id="gc-all" onclick="selGender('all')"><div class="gender-icon">⚥</div><div class="gender-lbl">All</div><div class="gender-cnt">4.21L</div></div>
+                <div class="gender-card" id="gc-female" onclick="selGender('female')"><div class="gender-icon">♀</div><div class="gender-lbl">Female</div><div class="gender-cnt">30% · 1.26L</div></div>
+                <div class="gender-card" id="gc-male" onclick="selGender('male')"><div class="gender-icon">♂</div><div class="gender-lbl">Male</div><div class="gender-cnt">70% · 2.95L</div></div>
+              </div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Age bracket <div class="spark-btn" onclick="spark('aud-age','22–35 is highest-value for fashion retargeting. 36–45 adds volume. 18–21 has lower conversion rate.')"><i class="ti ti-sparkles"></i></div></div>
+              <div class="chip-row"><div class="chip" onclick="this.classList.toggle('sel');updateDemoReach()">18–21</div><div class="chip sel" onclick="this.classList.toggle('sel');updateDemoReach()">22–35</div><div class="chip sel" onclick="this.classList.toggle('sel');updateDemoReach()">36–45</div><div class="chip" onclick="this.classList.toggle('sel');updateDemoReach()">46–55</div><div class="chip" onclick="this.classList.toggle('sel');updateDemoReach()">55+</div></div>
+              <div class="ai-suggestion" id="sug-aud-age"></div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Income tier <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Inferred from device tier, neighbourhood signals and app usage.</div></div></div>
+              <div class="chip-row"><div class="chip" onclick="this.classList.toggle('sel')">Budget</div><div class="chip sel" onclick="this.classList.toggle('sel')">Mid</div><div class="chip sel" onclick="this.classList.toggle('sel')">Premium</div><div class="chip" onclick="this.classList.toggle('sel')">Luxury</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEVICE -->
+        <div class="form-section" id="sec-device">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-device">4</div><div class="fsec-title">Device type</div><div class="fsec-badge"><span>Mobile · Desktop · CTV · Android + iOS · Mid + Flagship</span></div><div class="fsec-toggle" onclick="toggleSec('device')"><i class="ti ti-chevron-up" id="ftog-device"></i></div></div>
+          <div class="fsec-body" id="fbody-device">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Device</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+                <div class="gender-card sel" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-mobile" style="font-size:15px;color:#0050c8;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">Mobile</div><div class="gender-cnt" style="text-align:left">Android + iOS</div></div></div>
+                <div class="gender-card sel" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-laptop" style="font-size:15px;color:#0050c8;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">Desktop</div><div class="gender-cnt" style="text-align:left">Browser-based</div></div></div>
+                <div class="gender-card sel" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-tv" style="font-size:15px;color:#0050c8;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">CTV</div><div class="gender-cnt" style="text-align:left">Smart TV</div></div></div>
+                <div class="gender-card" style="text-align:left;display:flex;align-items:center;gap:8px" onclick="this.classList.toggle('sel')"><i class="ti ti-device-ipad" style="font-size:15px;color:#bbb;flex-shrink:0"></i><div><div class="gender-lbl" style="text-align:left">Tablet</div><div class="gender-cnt" style="text-align:left">iPad, Android</div></div></div>
+              </div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb"><div class="aud-flabel">Mobile OS</div><div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Android</div><div class="chip sel" onclick="this.classList.toggle('sel')">iOS</div></div></div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Device tier <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Flagship = ₹40K+ handsets. Mid-range = ₹15K–40K. Budget = below ₹15K.</div></div></div>
+              <div class="chip-row"><div class="chip" onclick="this.classList.toggle('sel')">Budget</div><div class="chip sel" onclick="this.classList.toggle('sel')">Mid-range</div><div class="chip sel" onclick="this.classList.toggle('sel')">Flagship</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INTERESTS -->
+        <div class="form-section" id="sec-interests">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-interests">5</div><div class="fsec-title">Interests & affinity</div><div class="fsec-badge"><span>Fashion · Beauty · Cart abandoner</span></div><div class="fsec-toggle" onclick="toggleSec('interests')"><i class="ti ti-chevron-up" id="ftog-interests"></i></div></div>
+          <div class="fsec-body" id="fbody-interests">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Interest category <div class="spark-btn" onclick="spark('aud-int','For Hiveclothing: Fashion and Beauty are essential. Shopping intent and Lifestyle have high cross-purchase overlap.')"><i class="ti ti-sparkles"></i></div></div>
+              <div class="int-cats"><div class="int-cat sel" onclick="this.classList.toggle('sel')">Fashion</div><div class="int-cat sel" onclick="this.classList.toggle('sel')">Beauty</div><div class="int-cat" onclick="this.classList.toggle('sel')">Lifestyle</div><div class="int-cat" onclick="this.classList.toggle('sel')">Travel</div><div class="int-cat" onclick="this.classList.toggle('sel')">Finance</div><div class="int-cat" onclick="this.classList.toggle('sel')">Sports</div><div class="int-cat" onclick="this.classList.toggle('sel')">Food & dining</div><div class="int-cat" onclick="this.classList.toggle('sel')">Tech</div><div class="int-cat" onclick="this.classList.toggle('sel')">Parenting</div><div class="int-cat" onclick="this.classList.toggle('sel')">Shopping intent</div><div class="int-cat" onclick="this.classList.toggle('sel')">Fitness</div><div class="int-cat" onclick="this.classList.toggle('sel')">Entertainment</div></div>
+              <div class="ai-suggestion" id="sug-aud-int"></div>
+            </div>
+            <div class="aud-divider"></div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Affinity signals <div class="tooltip-wrap"><div class="tooltip-icon"><i class="ti ti-info-small"></i></div><div class="tooltip-box">Based on specific recent behaviours in last 7–30 days. Narrows audience but increases relevance.</div></div></div>
+              <div class="aff-row"><div class="aff-chip sel" onclick="this.classList.toggle('sel');showNarrowedReach()">Fashion app active (7d)</div><div class="aff-chip sel" onclick="this.classList.toggle('sel');showNarrowedReach()">Cart abandoner</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">New season browser</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Sale hunter</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Premium shopper</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Recent purchase (30d)</div><div class="aff-chip" onclick="this.classList.toggle('sel');showNarrowedReach()">Wishlist adder</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NAME & SAVE -->
+        <div class="form-section" id="sec-name" style="margin-bottom:40px">
+          <div class="fsec-header"><div class="fsec-num" id="fnum-name">6</div><div class="fsec-title">Name & save</div><div class="fsec-badge" id="fbadge-name"></div><div class="fsec-toggle" onclick="toggleSec('name')"><i class="ti ti-chevron-up" id="ftog-name"></i></div></div>
+          <div class="fsec-body" id="fbody-name">
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Audience name <div class="spark-btn" onclick="spark('aud-nm','Hiveclothing_SS26_Female_22to45_Fashion_Retargeting — captures brand, segment, gender, age, category and type.')"><i class="ti ti-sparkles"></i></div></div>
+              <input class="aud-input" id="audFinalName" value="Hiveclothing_SS26_Female_Retargeting" oninput="document.getElementById('rpNameInp').value=this.value"/>
+              <div class="ai-suggestion" id="sug-aud-nm"></div>
+            </div>
+            <div class="aud-field-mb">
+              <div class="aud-flabel">Type label</div>
+              <div class="chip-row"><div class="chip sel" onclick="selectAudLabel(this)">Retargeting</div><div class="chip" onclick="selectAudLabel(this)">Prospecting</div><div class="chip" onclick="selectAudLabel(this)">Lookalike</div></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%;height:42px;justify-content:center;font-size:13px;border-radius:9px;margin-top:4px" onclick="saveAndReturn()"><i class="ti ti-check"></i> Save audience</button>
+          </div>
+        </div>
+
+      </div><!-- /audScrollForm -->
+
+    </div><!-- /aud-builder-left -->
+
+    <!-- REACH PANEL -->
+    <div class="aud-builder-right">
+      <div class="rp-title">Live reach estimate</div>
+      <div class="rp-big">
+        <div class="rp-num" id="rpNum">—</div>
+        <div class="rp-lbl" id="rpLbl">Add filters to see estimate</div>
+        <div class="rp-badge neutral" id="rpBadge">Awaiting filters</div>
+      </div>
+      <div class="rp-section" id="rpFunnel">
+        <div class="rp-section-title">Filter funnel</div>
+        <div id="rpFunnelRows"><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Waiting for data source…</div><div class="funnel-val">—</div></div></div>
+      </div>
+      <div class="rp-section" id="rpGenderBreak" style="display:none">
+        <div class="rp-section-title">Gender split</div>
+        <div class="rp-bar-row"><div class="rp-bar-lbl">Female</div><div class="rp-bar-track"><div class="rp-bar-fill pink" id="rpBFemale" style="width:30%"></div></div><div class="rp-bar-val" id="rpVFemale">30%</div></div>
+        <div class="rp-bar-row"><div class="rp-bar-lbl">Male</div><div class="rp-bar-track"><div class="rp-bar-fill" id="rpBMale" style="width:70%"></div></div><div class="rp-bar-val" id="rpVMale">70%</div></div>
+      </div>
+      <div class="rp-section" id="rpChBreak" style="display:none">
+        <div class="rp-section-title">Channel reachability</div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-device-mobile" style="font-size:11px;color:#0050c8"></i>Mobile</div><div class="rp-ch-val" id="rpChMob">—</div></div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-world" style="font-size:11px;color:#0050c8"></i>Web</div><div class="rp-ch-val" id="rpChWeb">—</div></div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-device-tv" style="font-size:11px;color:#0050c8"></i>CTV</div><div class="rp-ch-val" id="rpChCtv">—</div></div>
+        <div class="rp-ch-row"><div class="rp-ch-name"><i class="ti ti-screen-share" style="font-size:11px;color:#0050c8"></i>DOOH</div><div class="rp-ch-val" id="rpChDooh">—</div></div>
+      </div>
+      <div class="rp-save">
+        <input class="rp-name-inp" id="rpNameInp" placeholder="Audience name…" value="Hiveclothing_SS26_Female_Retargeting"/>
+        <button class="rp-save-btn" id="rpSaveBtn" onclick="saveAndReturn()" disabled style="opacity:.5;cursor:not-allowed"><i class="ti ti-check"></i> Save audience</button>
+      </div>
+    </div>
+
+  </div><!-- /audBuilder -->
+</div><!-- /aud-view-inner -->
+</div><!-- /aud-view -->
+
+<!-- ════════════════════════════════
+     RAILS VIEW
+════════════════════════════════ -->
+<div class="view" id="rails-view" style="background:#f5f6f8;min-height:calc(100vh - 52px)">
+  <div style="max-width:960px;margin:0 auto;padding:32px 28px 60px">
+
+    <!-- entry: list of saved rails configs -->
+    <div id="railsEntry">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:4px">Rails</div>
+          <div style="font-size:13px;color:#888">Publisher rules, allowlists, blocklists, DOOH zone and CTV genre constraints. Configure once, attach to any campaign.</div>
+        </div>
+        <button class="btn btn-primary" onclick="showRailsBuilder()"><i class="ti ti-plus"></i> New rails config</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div class="saved-card" onclick="showRailsDetail('web')">
+          <div class="saved-card-name">Hiveclothing_Premium_Web</div>
+          <div class="saved-card-sub">Web + Mobile · Allowlist 3 domains · Block gaming + adult</div>
+          <div class="saved-card-tags"><span class="tag blue">Web</span><span class="tag blue">Mobile</span></div>
+          <div style="margin-top:8px;padding-top:7px;border-top:1px solid #f0f0f0;font-size:10px;color:#bbb;display:flex;gap:12px">
+            <span>Allow: mint.com, vogue.in, femina.in</span>
+          </div>
+          <div class="saved-card-meta"><i class="ti ti-clock" style="font-size:10px"></i> Updated 5 days ago</div>
+        </div>
+        <div class="saved-card" onclick="showRailsDetail('ctv')">
+          <div class="saved-card-name">Hiveclothing_CTV_DOOH_Rules</div>
+          <div class="saved-card-sub">CTV + DOOH · JioCinema + Hotstar · Premium malls + metro</div>
+          <div class="saved-card-tags"><span class="tag blue">CTV</span><span class="tag blue">DOOH</span></div>
+          <div style="margin-top:8px;padding-top:7px;border-top:1px solid #f0f0f0;font-size:10px;color:#bbb">
+            <span>Block: cricket, highway, budget screens</span>
+          </div>
+          <div class="saved-card-meta"><i class="ti ti-clock" style="font-size:10px"></i> Updated 5 days ago</div>
+        </div>
+        <div class="new-saved-card" onclick="showRailsBuilder()">
+          <i class="ti ti-plus" style="font-size:20px"></i>
+          <span>New rails config</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- rails builder -->
+    <div id="railsBuilder" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+        <button class="btn btn-sm" onclick="hideRailsBuilder()"><i class="ti ti-arrow-left"></i> Back</button>
+        <div>
+          <div style="font-size:18px;font-weight:700;color:#111">New rails config</div>
+          <div style="font-size:13px;color:#888;margin-top:2px">Configure publisher rules per channel. Save once, reuse across campaigns.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="saveRails()"><i class="ti ti-check"></i> Save config</button>
+      </div>
+
+      <!-- name -->
+      <div class="form-section" style="margin-bottom:12px">
+        <div class="fsec-header"><div class="fsec-num done"><i class="ti ti-check" style="font-size:10px"></i></div><div class="fsec-title">Config name</div></div>
+        <div class="fsec-body">
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Name <div class="spark-btn" onclick="spark('rails-name','Hiveclothing_Premium_AllChannels_Jun26 — brand + quality tier + scope + date.')"><i class="ti ti-sparkles"></i></div></div>
+            <input class="aud-input" value="Hiveclothing_Premium_AllChannels" />
+            <div class="ai-suggestion" id="sug-rails-name"></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Applies to</div>
+            <div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Web</div><div class="chip sel" onclick="this.classList.toggle('sel')">Mobile / App</div><div class="chip sel" onclick="this.classList.toggle('sel')">DOOH</div><div class="chip sel" onclick="this.classList.toggle('sel')">CTV</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Web rules -->
+      <div class="form-section" style="margin-bottom:12px">
+        <div class="fsec-header" onclick="toggleSec('rails-web')"><div class="fsec-num" style="background:#0050c8">W</div><div class="fsec-title">Web — Publisher rules</div><div class="fsec-toggle"><i class="ti ti-chevron-up" id="ftog-rails-web"></i></div></div>
+        <div class="fsec-body" id="fbody-rails-web">
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Mode</div>
+            <div class="chip-row" style="margin-bottom:12px"><div class="chip sel" id="rweb-allow" onclick="setRailsMode('web','allow')">Allowlist — only these publishers</div><div class="chip" id="rweb-block" onclick="setRailsMode('web','block')">Blocklist — all except these</div></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Include domains <div class="spark-btn" onclick="spark('rails-web-inc','For fashion intenders: mint.com, economictimes.com/style, vogue.in, femina.in, elle.in. High-income readership, contextually relevant.')"><i class="ti ti-sparkles"></i></div></div>
+            <div class="pub-target-row" style="margin-bottom:8px"><input class="pub-input" id="rweb-inc-inp" placeholder="mint.com, vogue.in…"/><button class="pub-add-btn" onclick="addRailTag('rweb-inc','rweb-inc-inp','inc')">+ Add</button></div>
+            <div class="pub-tags" id="rweb-inc">
+              <div class="pub-tag-item">mint.com<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+              <div class="pub-tag-item">vogue.in<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+              <div class="pub-tag-item">femina.in<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+            </div>
+            <div class="ai-suggestion" id="sug-rails-web-inc"></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Exclude domains</div>
+            <div class="pub-target-row" style="margin-bottom:8px"><input class="pub-input" id="rweb-exc-inp" placeholder="Domains to block…"/><button class="pub-add-btn" onclick="addRailTag('rweb-exc','rweb-exc-inp','exc')">+ Add</button></div>
+            <div class="pub-tags" id="rweb-exc">
+              <div class="pub-tag-item excl">gaming-network.com ✕</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile rules -->
+      <div class="form-section" style="margin-bottom:12px">
+        <div class="fsec-header" onclick="toggleSec('rails-mob')"><div class="fsec-num" style="background:#0050c8">M</div><div class="fsec-title">Mobile / App — App rules</div><div class="fsec-toggle"><i class="ti ti-chevron-up" id="ftog-rails-mob"></i></div></div>
+        <div class="fsec-body" id="fbody-rails-mob">
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Mode</div>
+            <div class="chip-row" style="margin-bottom:12px"><div class="chip sel">Allowlist</div><div class="chip">Blocklist</div></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Include apps <div class="spark-btn" onclick="spark('rails-mob-inc','For fashion retargeting: com.myntra, com.nykaa, com.ajio, com.purplle. High fashion-intent inventory with strong audience overlap.')"><i class="ti ti-sparkles"></i></div></div>
+            <div class="pub-target-row" style="margin-bottom:8px"><input class="pub-input" id="rmob-inc-inp" placeholder="com.myntra, com.nykaa…"/><button class="pub-add-btn" onclick="addRailTag('rmob-inc','rmob-inc-inp','inc')">+ Add</button></div>
+            <div class="pub-tags" id="rmob-inc">
+              <div class="pub-tag-item">com.myntra<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+              <div class="pub-tag-item">com.nykaa<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+              <div class="pub-tag-item">com.ajio<span class="pub-tag-x" onclick="removePub(this)"> ✕</span></div>
+            </div>
+            <div class="ai-suggestion" id="sug-rails-mob-inc"></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Exclude categories</div>
+            <div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Gaming</div><div class="chip sel" onclick="this.classList.toggle('sel')">Adult</div><div class="chip" onclick="this.classList.toggle('sel')">News</div><div class="chip" onclick="this.classList.toggle('sel')">Utilities</div><div class="chip" onclick="this.classList.toggle('sel')">Tools</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DOOH rules -->
+      <div class="form-section" style="margin-bottom:12px">
+        <div class="fsec-header" onclick="toggleSec('rails-dooh')"><div class="fsec-num" style="background:#0050c8">D</div><div class="fsec-title">DOOH — Zone &amp; screen rules</div><div class="fsec-toggle"><i class="ti ti-chevron-up" id="ftog-rails-dooh"></i></div></div>
+        <div class="fsec-body" id="fbody-rails-dooh">
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Include screen types <div class="spark-btn" onclick="spark('rails-dooh-inc','For fashion + mid-premium audience: Premium malls (Palladium, Select Citywalk, Bandra Kurla) and metro stations (Andheri, Connaught Place). Footfall matches your audience profile.')"><i class="ti ti-sparkles"></i></div></div>
+            <div class="chip-row" style="margin-bottom:8px"><div class="chip sel" onclick="this.classList.toggle('sel')">Premium malls</div><div class="chip sel" onclick="this.classList.toggle('sel')">Metro stations</div><div class="chip" onclick="this.classList.toggle('sel')">Airports</div><div class="chip" onclick="this.classList.toggle('sel')">Office parks</div><div class="chip" onclick="this.classList.toggle('sel')">High street retail</div></div>
+            <div class="ai-suggestion" id="sug-rails-dooh-inc"></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Exclude screen types</div>
+            <div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Highway</div><div class="chip" onclick="this.classList.toggle('sel')">Budget retail</div><div class="chip" onclick="this.classList.toggle('sel')">Petrol stations</div></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Minimum screen quality tier</div>
+            <div class="chip-row"><div class="chip" onclick="[...this.parentElement.children].forEach(c=>c.classList.remove('sel'));this.classList.add('sel')">Any</div><div class="chip sel" onclick="[...this.parentElement.children].forEach(c=>c.classList.remove('sel'));this.classList.add('sel')">Mid+</div><div class="chip" onclick="[...this.parentElement.children].forEach(c=>c.classList.remove('sel'));this.classList.add('sel')">Premium only</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTV rules -->
+      <div class="form-section" style="margin-bottom:24px">
+        <div class="fsec-header" onclick="toggleSec('rails-ctv')"><div class="fsec-num" style="background:#0050c8">C</div><div class="fsec-title">CTV — Platform &amp; genre rules</div><div class="fsec-toggle"><i class="ti ti-chevron-up" id="ftog-rails-ctv"></i></div></div>
+        <div class="fsec-body" id="fbody-rails-ctv">
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Include platforms <div class="spark-btn" onclick="spark('rails-ctv-inc','JioCinema and Hotstar have highest household overlap with your female 22–38 audience. SonyLIV adds reach in South India. Avoid MX Player — lower-income skew.')"><i class="ti ti-sparkles"></i></div></div>
+            <div class="chip-row" style="margin-bottom:8px"><div class="chip sel" onclick="this.classList.toggle('sel')">JioCinema</div><div class="chip sel" onclick="this.classList.toggle('sel')">Hotstar</div><div class="chip" onclick="this.classList.toggle('sel')">SonyLIV</div><div class="chip" onclick="this.classList.toggle('sel')">Zee5</div><div class="chip" onclick="this.classList.toggle('sel')">MX Player</div></div>
+            <div class="ai-suggestion" id="sug-rails-ctv-inc"></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Include content genres</div>
+            <div class="chip-row" style="margin-bottom:8px"><div class="chip sel" onclick="this.classList.toggle('sel')">Drama</div><div class="chip sel" onclick="this.classList.toggle('sel')">Lifestyle</div><div class="chip" onclick="this.classList.toggle('sel')">Reality TV</div><div class="chip" onclick="this.classList.toggle('sel')">Fashion</div><div class="chip" onclick="this.classList.toggle('sel')">Movies</div></div>
+          </div>
+          <div class="aud-field-mb">
+            <div class="aud-flabel">Exclude content genres</div>
+            <div class="chip-row"><div class="chip sel" onclick="this.classList.toggle('sel')">Cricket / Sports</div><div class="chip" onclick="this.classList.toggle('sel')">News</div><div class="chip" onclick="this.classList.toggle('sel')">Gaming</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:10px">
+        <button class="btn" onclick="hideRailsBuilder()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveRails()"><i class="ti ti-check"></i> Save rails config</button>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /rails-view -->
+
+<!-- ════════════════════════════════
+     CREATIVES VIEW
+════════════════════════════════ -->
+<div class="view" id="creatives-view" style="background:#f5f6f8;min-height:calc(100vh - 52px)">
+  <div style="max-width:1100px;margin:0 auto;padding:32px 28px 60px">
+
+    <!-- header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:3px">Creative library</div>
+        <div style="font-size:13px;color:#888">Upload and manage all brand assets. Reuse directly in any campaign.</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn" onclick="document.getElementById('crvUploadZone').style.display='block'"><i class="ti ti-upload"></i> Upload assets</button>
+        <button class="btn btn-primary" onclick="document.getElementById('crvVastModal').style.display='flex'"><i class="ti ti-link"></i> Add VAST URL</button>
+      </div>
+    </div>
+
+    <!-- bulk upload zone (hidden by default) -->
+    <div id="crvUploadZone" style="display:none;margin-bottom:20px">
+      <div style="border:2px dashed #c0cfe8;border-radius:12px;padding:32px;text-align:center;background:#f5f8ff;cursor:pointer;transition:all .15s" onclick="fakeCreativeUpload()">
+        <i class="ti ti-cloud-upload" style="font-size:32px;color:#c0cfe8;display:block;margin-bottom:10px"></i>
+        <div style="font-size:14px;font-weight:600;color:#0050c8;margin-bottom:4px">Click to upload or drag and drop</div>
+        <div style="font-size:12px;color:#aaa">JPG, PNG, MP4, GIF · Max 100MB per file · Bulk upload supported</div>
+      </div>
+    </div>
+
+    <!-- VAST modal -->
+    <div id="crvVastModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:400;align-items:center;justify-content:center">
+      <div style="background:#fff;border-radius:14px;padding:28px;width:480px;box-shadow:0 8px 40px rgba(0,0,0,.15)">
+        <div style="font-size:16px;font-weight:700;color:#111;margin-bottom:4px">Add VAST URL</div>
+        <div style="font-size:12px;color:#888;margin-bottom:18px">For CTV pre-roll delivery. Paste your VAST 4.0 compatible URL below.</div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin-bottom:5px">Asset name</div>
+          <input class="aud-input" placeholder="e.g. Hiveclothing_Summer26_15s_CTV" id="vastNameInp"/>
+        </div>
+        <div style="margin-bottom:18px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin-bottom:5px">VAST URL</div>
+          <input class="aud-input" placeholder="https://adserver.example.com/vast.xml" id="vastUrlInp"/>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn" onclick="document.getElementById('crvVastModal').style.display='none'">Cancel</button>
+          <button class="btn btn-primary" onclick="addVastAsset()"><i class="ti ti-check"></i> Add VAST</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- filters + search -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+      <div style="position:relative;flex:1;min-width:200px">
+        <input class="aud-input" placeholder="Search assets…" style="padding-left:34px" oninput="filterCreatives(this.value)"/>
+        <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#bbb;font-size:13px;pointer-events:none"></i>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div class="chip sel" id="crf-all" onclick="setCrvFilter('all')">All</div>
+        <div class="chip" id="crf-display" onclick="setCrvFilter('display')"><i class="ti ti-photo" style="font-size:11px"></i> Display</div>
+        <div class="chip" id="crf-video" onclick="setCrvFilter('video')"><i class="ti ti-video" style="font-size:11px"></i> Video</div>
+        <div class="chip" id="crf-vast" onclick="setCrvFilter('vast')"><i class="ti ti-link" style="font-size:11px"></i> VAST</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div class="chip" id="crfc-web" onclick="toggleCrvChan('web')"><i class="ti ti-world" style="font-size:11px"></i> Web</div>
+        <div class="chip" id="crfc-mobile" onclick="toggleCrvChan('mobile')"><i class="ti ti-device-mobile" style="font-size:11px"></i> Mobile</div>
+        <div class="chip" id="crfc-dooh" onclick="toggleCrvChan('dooh')"><i class="ti ti-screen-share" style="font-size:11px"></i> DOOH</div>
+        <div class="chip" id="crfc-ctv" onclick="toggleCrvChan('ctv')"><i class="ti ti-device-tv" style="font-size:11px"></i> CTV</div>
+      </div>
+      <!-- view toggle -->
+      <div style="display:flex;border:1px solid #e0e0e0;border-radius:7px;overflow:hidden">
+        <div id="crv-grid-btn" style="padding:6px 10px;cursor:pointer;background:#0050c8;color:#fff;font-size:13px" onclick="setCrvView('grid')"><i class="ti ti-layout-grid"></i></div>
+        <div id="crv-list-btn" style="padding:6px 10px;cursor:pointer;background:#fff;color:#888;font-size:13px;border-left:1px solid #e0e0e0" onclick="setCrvView('list')"><i class="ti ti-layout-list"></i></div>
+      </div>
+    </div>
+
+    <!-- folder tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">
+      <div class="chip sel" id="crvfolder-all" onclick="setCrvFolder('all')">All brands</div>
+      <div class="chip" id="crvfolder-hiveclothing" onclick="setCrvFolder('hiveclothing')">Hiveclothing</div>
+      <div class="chip" id="crvfolder-myntra" onclick="setCrvFolder('myntra')">Myntra</div>
+      <div class="chip" style="color:#0050c8;border-color:#c0cfe8;background:#eef2ff" onclick="addFolder()"><i class="ti ti-plus" style="font-size:11px"></i> New folder</div>
+    </div>
+
+    <!-- asset grid -->
+    <div id="crvGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">
+
+      <!-- Display assets -->
+      <div class="crv-card" data-type="display" data-channels="web,mobile" data-folder="hiveclothing" data-name="Banner_A_Lifestyle">
+        <div class="crv-thumb" style="background:linear-gradient(135deg,#f5f0ff,#e0d5ff)">
+          <i class="ti ti-photo" style="font-size:28px;color:#7c3aed;opacity:.4"></i>
+          <div class="crv-play-icon" style="display:none"></div>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">Banner_A_Lifestyle.jpg</div>
+          <div class="crv-dims">300×250 · 84 KB</div>
+          <div class="crv-channels"><span class="crv-ch-tag">Web</span><span class="crv-ch-tag">Mobile</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 3 campaigns</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crv-card" data-type="display" data-channels="web,mobile" data-folder="hiveclothing" data-name="Banner_B_Product">
+        <div class="crv-thumb" style="background:linear-gradient(135deg,#fff5f0,#ffe0d0)">
+          <i class="ti ti-photo" style="font-size:28px;color:#c2410c;opacity:.4"></i>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">Banner_B_Product.jpg</div>
+          <div class="crv-dims">300×250 · 62 KB</div>
+          <div class="crv-channels"><span class="crv-ch-tag">Web</span><span class="crv-ch-tag">Mobile</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 1 campaign</div>
+            <div class="crv-status rejected-dot">Needs revision</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crv-card" data-type="display" data-channels="web" data-folder="hiveclothing" data-name="Leaderboard_728">
+        <div class="crv-thumb" style="background:linear-gradient(135deg,#f0f5ff,#d5e5ff)">
+          <i class="ti ti-photo" style="font-size:28px;color:#0050c8;opacity:.4"></i>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">Leaderboard_728.jpg</div>
+          <div class="crv-dims">728×90 · 48 KB</div>
+          <div class="crv-channels"><span class="crv-ch-tag">Web</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 2 campaigns</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crv-card" data-type="display" data-channels="mobile" data-folder="hiveclothing" data-name="Interstitial_Full">
+        <div class="crv-thumb" style="background:linear-gradient(135deg,#f0fff5,#d5ffe5)">
+          <i class="ti ti-photo" style="font-size:28px;color:#065f46;opacity:.4"></i>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">Interstitial_Full.jpg</div>
+          <div class="crv-dims">320×480 · 120 KB</div>
+          <div class="crv-channels"><span class="crv-ch-tag">Mobile</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 4 campaigns</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video assets -->
+      <div class="crv-card" data-type="video" data-channels="dooh,ctv" data-folder="hiveclothing" data-name="OOH_Summer_16s">
+        <div class="crv-thumb" style="background:linear-gradient(135deg,#1a1a2e,#16213e);position:relative">
+          <i class="ti ti-video" style="font-size:28px;color:#fff;opacity:.5"></i>
+          <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600">0:16</div>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">OOH_Summer_16s.mp4</div>
+          <div class="crv-dims">1920×1080 · 8.4 MB</div>
+          <div class="crv-channels"><span class="crv-ch-tag">DOOH</span><span class="crv-ch-tag">CTV</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 2 campaigns</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crv-card" data-type="video" data-channels="dooh" data-folder="myntra" data-name="Myntra_SS26_DOOH_10s">
+        <div class="crv-thumb" style="background:linear-gradient(135deg,#0f0c29,#302b63);position:relative">
+          <i class="ti ti-video" style="font-size:28px;color:#fff;opacity:.5"></i>
+          <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600">0:10</div>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">Myntra_SS26_DOOH_10s.mp4</div>
+          <div class="crv-dims">1920×1080 · 6.1 MB</div>
+          <div class="crv-channels"><span class="crv-ch-tag">DOOH</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 1 campaign</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VAST assets -->
+      <div class="crv-card" data-type="vast" data-channels="ctv" data-folder="hiveclothing" data-name="VAST_CTV_15s">
+        <div class="crv-thumb crv-thumb-vast" style="background:#f5f8ff;border:2px solid #c0cfe8">
+          <i class="ti ti-link" style="font-size:24px;color:#0050c8;opacity:.5"></i>
+          <div style="font-size:10px;font-weight:700;color:#0050c8;margin-top:6px;opacity:.7">VAST 4.0</div>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">VAST_CTV_15s_Hiveclothing</div>
+          <div class="crv-dims">VAST URL · 15s pre-roll</div>
+          <div class="crv-channels"><span class="crv-ch-tag">CTV</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 3 campaigns</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crv-card" data-type="vast" data-channels="ctv" data-folder="myntra" data-name="VAST_CTV_30s">
+        <div class="crv-thumb crv-thumb-vast" style="background:#f5f8ff;border:2px solid #c0cfe8">
+          <i class="ti ti-link" style="font-size:24px;color:#0050c8;opacity:.5"></i>
+          <div style="font-size:10px;font-weight:700;color:#0050c8;margin-top:6px;opacity:.7">VAST 4.0</div>
+        </div>
+        <div class="crv-body">
+          <div class="crv-name">VAST_CTV_30s_Myntra</div>
+          <div class="crv-dims">VAST URL · 30s pre-roll</div>
+          <div class="crv-channels"><span class="crv-ch-tag">CTV</span></div>
+          <div class="crv-foot">
+            <div class="crv-used">Used in 1 campaign</div>
+            <div class="crv-status active-dot">Active</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- upload prompt card -->
+      <div class="crv-card crv-upload-card" onclick="document.getElementById('crvUploadZone').style.display='block';window.scrollTo({top:0,behavior:'smooth'})">
+        <div class="crv-thumb" style="background:#f8f8f8;border:2px dashed #e0e0e0;flex-direction:column;gap:6px">
+          <i class="ti ti-plus" style="font-size:24px;color:#bbb"></i>
+          <div style="font-size:11px;color:#bbb;font-weight:600">Upload new</div>
+        </div>
+      </div>
+
+    </div><!-- /crvGrid -->
+
+    <!-- list view (hidden by default) -->
+    <div id="crvList" style="display:none">
+      <div style="background:#fff;border:1px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:40px 2fr 1fr 1fr 1fr 1fr 80px;gap:0;padding:10px 16px;background:#f8f8f8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;border-bottom:1px solid #f0f0f0">
+          <span></span><span>Asset</span><span>Type</span><span>Dimensions</span><span>Channels</span><span>Campaigns</span><span>Status</span>
+        </div>
+        <div class="crv-list-row"><div style="font-size:18px;color:#7c3aed"><i class="ti ti-photo"></i></div><div><div class="crv-name">Banner_A_Lifestyle.jpg</div><div class="crv-dims">Hiveclothing</div></div><div style="font-size:12px;color:#666">Display</div><div style="font-size:12px;color:#666">300×250</div><div><span class="crv-ch-tag">Web</span><span class="crv-ch-tag">Mobile</span></div><div style="font-size:12px;color:#666">3</div><div><div class="crv-status active-dot">Active</div></div></div>
+        <div class="crv-list-row"><div style="font-size:18px;color:#c2410c"><i class="ti ti-photo"></i></div><div><div class="crv-name">Banner_B_Product.jpg</div><div class="crv-dims">Hiveclothing</div></div><div style="font-size:12px;color:#666">Display</div><div style="font-size:12px;color:#666">300×250</div><div><span class="crv-ch-tag">Web</span><span class="crv-ch-tag">Mobile</span></div><div style="font-size:12px;color:#666">1</div><div><div class="crv-status rejected-dot">Needs revision</div></div></div>
+        <div class="crv-list-row"><div style="font-size:18px;color:#0050c8"><i class="ti ti-video"></i></div><div><div class="crv-name">OOH_Summer_16s.mp4</div><div class="crv-dims">Hiveclothing</div></div><div style="font-size:12px;color:#666">Video</div><div style="font-size:12px;color:#666">1920×1080</div><div><span class="crv-ch-tag">DOOH</span><span class="crv-ch-tag">CTV</span></div><div style="font-size:12px;color:#666">2</div><div><div class="crv-status active-dot">Active</div></div></div>
+        <div class="crv-list-row"><div style="font-size:18px;color:#0050c8"><i class="ti ti-link"></i></div><div><div class="crv-name">VAST_CTV_15s_Hiveclothing</div><div class="crv-dims">Hiveclothing</div></div><div style="font-size:12px;color:#666">VAST</div><div style="font-size:12px;color:#666">15s pre-roll</div><div><span class="crv-ch-tag">CTV</span></div><div style="font-size:12px;color:#666">3</div><div><div class="crv-status active-dot">Active</div></div></div>
+        <div class="crv-list-row"><div style="font-size:18px;color:#0050c8"><i class="ti ti-video"></i></div><div><div class="crv-name">Myntra_SS26_DOOH_10s.mp4</div><div class="crv-dims">Myntra</div></div><div style="font-size:12px;color:#666">Video</div><div style="font-size:12px;color:#666">1920×1080</div><div><span class="crv-ch-tag">DOOH</span></div><div style="font-size:12px;color:#666">1</div><div><div class="crv-status active-dot">Active</div></div></div>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /creatives-view -->
+
+</div><!-- /sbMain -->
+
+<div id="floater" class="ai-suggestion" style="display:none;position:fixed;bottom:24px;right:24px;max-width:310px;z-index:500;box-shadow:0 4px 20px rgba(0,0,0,.1)"></div>
+
+<script>
+// ════ STATE ════
+const CAMP_STEPS = ['Prompt','Campaign & Audience','Reach & Budget','Creatives','Submitted'];
+let campStep = 0;
+const locked = {web:false,mobile:false,dooh:false,ctv:false};
+const active = {web:true,mobile:true,dooh:true,ctv:true};
+let selAudId = null;
+let kpiSel = 'awareness';
+let audFlow = null;
+let audGender = 'all';
+
+// ════ SIDEBAR ════
+let sidebarOpen = true;
+function toggleSidebar(){
+  sidebarOpen=!sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('collapsed',!sidebarOpen);
+  document.getElementById('sbMain').classList.toggle('collapsed',!sidebarOpen);
+  document.getElementById('sbToggleIcon').className=sidebarOpen?'ti ti-layout-sidebar-left-collapse':'ti ti-layout-sidebar-right-collapse';
+}
+
+const SB_LABELS = {new:'New Campaign',camp:'All Campaigns',aud:'Audiences',rails:'Rails',creatives:'Creatives',profile:'Profile'};
+
+function sidebarNav(item){
+  // Update sidebar active state
+  ['new','camp','aud','rails','creatives','profile'].forEach(i=>{
+    const el=document.getElementById('sbi-'+i);
+    if(el) el.classList.toggle('active',i===item);
+  });
+  // Update topbar label
+  document.getElementById('topbarLeft').textContent=SB_LABELS[item]||'ADCP';
+  document.getElementById('stepCounter').textContent='';
+
+  if(item==='new'){
+    showAllViews(false);
+    document.getElementById('camp-view').style.display='block';
+    showCampFlow();
+    document.getElementById('stepCounter').textContent='Start';
+  } else if(item==='camp'){
+    showAllViews(false);
+    document.getElementById('camp-view').style.display='block';
+    showCampList();
+  } else if(item==='aud'){
+    showAllViews(false);
+    document.getElementById('aud-view').style.display='block';
+    // ensure entry is shown
+    document.getElementById('audEntry').style.display='flex';
+    document.getElementById('audBuilder').classList.remove('show');
+    document.getElementById('progressWrap').style.display='none';
+  } else if(item==='rails'){
+    showAllViews(false);
+    document.getElementById('rails-view').style.display='block';
+    document.getElementById('progressWrap').style.display='none';
+  } else if(item==='creatives'){
+    showAllViews(false);
+    document.getElementById('creatives-view').style.display='block';
+    document.getElementById('progressWrap').style.display='none';
+  } else if(item==='profile'){
+    // no-op for now
+  }
+}
+
+function showAllViews(show){
+  ['camp-view','aud-view','rails-view','creatives-view'].forEach(id=>{
+    document.getElementById(id).style.display=show?'block':'none';
+  });
+}
+
+// ════ TAB ════ (kept for internal use by retarget etc)
+function switchTab(tab){
+  const map={camp:'camp',aud:'aud',rails:'rails',creatives:'creatives'};
+  if(map[tab]) sidebarNav(map[tab]);
+}
+
+// ════ CREATIVE PICKER (campaign flow) ════
+function openLibraryPicker(listId, channel){
+  // close any others first
+  ['web','mobile','dooh','ctv'].forEach(ch=>{
+    const p=document.getElementById('cpick-'+ch);
+    if(p) p.style.display='none';
+  });
+  document.getElementById('cpick-'+channel).style.display='block';
+}
+function closeLibraryPicker(channel){
+  document.getElementById('cpick-'+channel).style.display='none';
+}
+function selectLibAsset(listId, name, dim, bg1, color, pickerId, type){
+  const list=document.getElementById(listId);
+  // avoid duplicates
+  const existing=[...list.querySelectorAll('.crv-sel-name')].map(el=>el.textContent);
+  if(existing.includes(name)) return;
+  const icon = type==='vast' ? 'ti-link' : (name.endsWith('.mp4')||name.endsWith('.mov')) ? 'ti-video' : 'ti-photo';
+  const item=document.createElement('div');
+  item.className='crv-sel-item';
+  item.innerHTML=`<div class="crv-sel-thumb" style="background:${bg1};border:1px solid #e0e0e0"><i class="ti ${icon}" style="font-size:12px;color:${color}"></i></div><div class="crv-sel-name">${name}</div><div class="crv-sel-dim">${dim}</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span>`;
+  list.appendChild(item);
+  document.getElementById(pickerId).style.display='none';
+}
+function removeCrvSel(el){
+  el.parentElement.remove();
+}
+function fakeAddAsset(listId, channel){
+  const names={web:'New_Banner.jpg',mobile:'New_Mobile.jpg',dooh:'New_Video.mp4',ctv:'New_VAST_URL'};
+  const dims={web:'300×250',mobile:'320×480',dooh:'1920×1080',ctv:'VAST 4.0'};
+  const icons={web:'ti-photo',mobile:'ti-photo',dooh:'ti-video',ctv:'ti-link'};
+  const list=document.getElementById(listId);
+  const item=document.createElement('div');
+  item.className='crv-sel-item';
+  item.innerHTML=`<div class="crv-sel-thumb" style="background:#f0f0f0"><i class="ti ${icons[channel]}" style="font-size:12px;color:#888"></i></div><div class="crv-sel-name">${names[channel]}</div><div class="crv-sel-dim">${dims[channel]}</div><span class="crv-sel-remove" onclick="removeCrvSel(this)">✕</span>`;
+  list.appendChild(item);
+}
+
+// ════ CREATIVES ════
+let crvView='grid', crvFilter='all', crvFolder='all';
+
+function setCrvView(v){
+  crvView=v;
+  document.getElementById('crvGrid').style.display=v==='grid'?'grid':'none';
+  document.getElementById('crvList').style.display=v==='list'?'block':'none';
+  document.getElementById('crv-grid-btn').style.background=v==='grid'?'#0050c8':'#fff';
+  document.getElementById('crv-grid-btn').style.color=v==='grid'?'#fff':'#888';
+  document.getElementById('crv-list-btn').style.background=v==='list'?'#0050c8':'#fff';
+  document.getElementById('crv-list-btn').style.color=v==='list'?'#fff':'#888';
+}
+
+function setCrvFilter(f){
+  crvFilter=f;
+  ['all','display','video','vast'].forEach(x=>document.getElementById('crf-'+x).classList.toggle('sel',x===f));
+  applyCrvFilters();
+}
+
+function toggleCrvChan(ch){
+  document.getElementById('crfc-'+ch).classList.toggle('sel');
+  applyCrvFilters();
+}
+
+function setCrvFolder(f){
+  crvFolder=f;
+  ['all','hiveclothing','myntra'].forEach(x=>document.getElementById('crvfolder-'+x).classList.toggle('sel',x===f));
+  applyCrvFilters();
+}
+
+function applyCrvFilters(){
+  const cards=document.querySelectorAll('#crvGrid .crv-card:not(.crv-upload-card)');
+  const activeChan=['web','mobile','dooh','ctv'].filter(c=>document.getElementById('crfc-'+c)?.classList.contains('sel'));
+  cards.forEach(card=>{
+    const type=card.dataset.type||'';
+    const channels=(card.dataset.channels||'').split(',');
+    const folder=card.dataset.folder||'';
+    const typeOk=crvFilter==='all'||type===crvFilter;
+    const folderOk=crvFolder==='all'||folder===crvFolder;
+    const chanOk=activeChan.length===0||activeChan.some(c=>channels.includes(c));
+    card.style.display=(typeOk&&folderOk&&chanOk)?'':'none';
+  });
+}
+
+function filterCreatives(q){
+  const cards=document.querySelectorAll('#crvGrid .crv-card:not(.crv-upload-card)');
+  const lq=q.toLowerCase();
+  cards.forEach(card=>{
+    const name=(card.dataset.name||'').toLowerCase();
+    card.style.display=name.includes(lq)?'':'none';
+  });
+}
+
+function fakeCreativeUpload(){
+  document.getElementById('crvUploadZone').style.display='none';
+  // add a new card to grid
+  const grid=document.getElementById('crvGrid');
+  const card=document.createElement('div');
+  card.className='crv-card';
+  card.dataset.type='display';card.dataset.channels='web,mobile';card.dataset.folder='hiveclothing';card.dataset.name='New_Asset';
+  card.innerHTML=`<div class="crv-thumb" style="background:linear-gradient(135deg,#f5f5f5,#e8e8e8)"><i class="ti ti-photo" style="font-size:28px;color:#bbb;opacity:.5"></i></div><div class="crv-body"><div class="crv-name">New_Asset.jpg</div><div class="crv-dims">300×250 · Just uploaded</div><div class="crv-channels"><span class="crv-ch-tag">Web</span><span class="crv-ch-tag">Mobile</span></div><div class="crv-foot"><div class="crv-used">Not used yet</div><div class="crv-status active-dot">Active</div></div></div>`;
+  const uploadPrompt=grid.querySelector('.crv-upload-card');
+  grid.insertBefore(card,uploadPrompt);
+}
+
+function addVastAsset(){
+  const name=document.getElementById('vastNameInp').value||'New_VAST';
+  const grid=document.getElementById('crvGrid');
+  const card=document.createElement('div');
+  card.className='crv-card';
+  card.dataset.type='vast';card.dataset.channels='ctv';card.dataset.folder='hiveclothing';card.dataset.name=name;
+  card.innerHTML=`<div class="crv-thumb crv-thumb-vast" style="background:#f5f8ff;border:2px solid #c0cfe8"><i class="ti ti-link" style="font-size:24px;color:#0050c8;opacity:.5"></i><div style="font-size:10px;font-weight:700;color:#0050c8;margin-top:6px;opacity:.7">VAST 4.0</div></div><div class="crv-body"><div class="crv-name">${name}</div><div class="crv-dims">VAST URL · Pre-roll</div><div class="crv-channels"><span class="crv-ch-tag">CTV</span></div><div class="crv-foot"><div class="crv-used">Not used yet</div><div class="crv-status active-dot">Active</div></div></div>`;
+  const uploadPrompt=grid.querySelector('.crv-upload-card');
+  grid.insertBefore(card,uploadPrompt);
+  document.getElementById('crvVastModal').style.display='none';
+  document.getElementById('vastNameInp').value='';
+  document.getElementById('vastUrlInp').value='';
+}
+
+function addFolder(){
+  const name=prompt('Folder name:');
+  if(!name)return;
+  const key=name.toLowerCase().replace(/\s+/g,'');
+  const folderRow=document.querySelector('[id^="crvfolder-myntra"]').parentElement;
+  const btn=document.createElement('div');
+  btn.className='chip';btn.id='crvfolder-'+key;
+  btn.onclick=()=>setCrvFolder(key);
+  btn.textContent=name;
+  folderRow.insertBefore(btn, folderRow.lastElementChild);
+}
+
+// ════ RETARGET ════
+function startRetarget(sourceCamp, audName, audSub, audTags, maids, matchRate) {
+  // Show campaign view, hide others
+  showAllViews(false);
+  document.getElementById('camp-view').style.display='block';
+  // Show flow, hide list
+  document.getElementById('campList').style.display='none';
+  document.getElementById('campFlow').style.display='block';
+  // Go to step 1
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  campStep=1;
+  document.getElementById('screen-1').classList.add('active');
+  document.getElementById('progressWrap').style.display='block';
+  updateProgress();
+  // Update sidebar + topbar
+  ['new','camp','aud','rails','creatives','profile'].forEach(i=>{
+    const el=document.getElementById('sbi-'+i);
+    if(el) el.classList.toggle('active',i==='new');
+  });
+  document.getElementById('topbarLeft').textContent='New Campaign';
+  document.getElementById('stepCounter').textContent='Step 1 of 4';
+  // Pre-fill campaign name
+  const campNameInp = document.querySelector('#screen-1 input.editable-field');
+  if(campNameInp){
+    const base = audName.split('_').slice(0,2).join('_');
+    const d = new Date();
+    const mon = d.toLocaleString('default',{month:'short'})+d.getFullYear().toString().slice(2);
+    campNameInp.value = base + '_Retargeting_' + mon;
+  }
+  // Pre-select KPI as Conversion
+  selKpi('conv');
+  // Pre-select the audience
+  pickAud('', audName, audSub, audTags, maids, matchRate, '4');
+  // Show retarget notice banner
+  const notice = document.getElementById('retargetNotice');
+  if(notice){
+    notice.style.display='flex';
+    document.getElementById('retargetNoticeSrc').textContent = sourceCamp ? 'from campaign: ' + sourceCamp : 'from audience: ' + audName;
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════ CAMPAIGN LIST / FLOW TOGGLE ════
+function showCampList(){
+  document.getElementById('campList').style.display='block';
+  document.getElementById('campFlow').style.display='none';
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('stepCounter').textContent='All Campaigns';
+  document.getElementById('topbarLeft').textContent='All Campaigns';
+  campStep=0;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-0').classList.add('active');
+  updateProgress();
+  // set sidebar active
+  ['new','camp','aud','rails','creatives','profile'].forEach(i=>{
+    const el=document.getElementById('sbi-'+i);
+    if(el) el.classList.toggle('active',i==='camp');
+  });
+}
+function showCampFlow(){
+  document.getElementById('campList').style.display='none';
+  document.getElementById('campFlow').style.display='block';
+  document.getElementById('stepCounter').textContent='Start';
+  document.getElementById('topbarLeft').textContent='New Campaign';
+  campStep=0;
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-0').classList.add('active');
+  updateProgress();
+  // set sidebar active
+  ['new','camp','aud','rails','creatives','profile'].forEach(i=>{
+    const el=document.getElementById('sbi-'+i);
+    if(el) el.classList.toggle('active',i==='new');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function setCampTab(tab){
+  ['all','live','approval','draft','published'].forEach(t=>{
+    document.getElementById('cltab-'+t).classList.toggle('active',t===tab);
+  });
+  const groups={all:['live','approval','draft','published'],live:['live'],approval:['approval'],draft:['draft'],published:['published']};
+  ['live','approval','draft','published'].forEach(g=>{
+    const el=document.getElementById('csg-'+g);
+    if(el) el.style.display=(groups[tab]||[]).includes(g)?'block':'none';
+  });
+}
+
+// ════ CAMPAIGN FLOW ════
+const HINTS=['Retargeting for Hiveclothing — users who saw our summer collection, ₹8L budget, 30 days, heavier on CTV and DOOH, Mumbai and Delhi only','Brand awareness for a new fintech app — all channels, ₹15L, 45 days, pan-India, mobile-first','Luxury fashion launch — CTV and DOOH only, metro cities, ₹20L, 3 weeks, premium inventory','Performance retargeting — mobile app installs, ₹5L, 2 weeks, tier 1 and tier 2 cities'];
+function fillHint(i){document.getElementById('promptInput').value=HINTS[i];document.getElementById('promptInput').focus();}
+function submitPrompt(){
+  const v=document.getElementById('promptInput').value.trim();
+  if(!v)return;
+  document.getElementById('progressWrap').style.display='block';
+  goTo(1);
+  const g=document.getElementById('gen1');
+  g.classList.add('show');
+  setTimeout(()=>g.classList.remove('show'),1800);
+}
+
+function buildProgress(){
+  const wrap=document.getElementById('progressSteps');
+  wrap.innerHTML='';
+  CAMP_STEPS.forEach((s,i)=>{
+    const item=document.createElement('div');item.className='prog-item';
+    item.innerHTML=`<div class="prog-dot" id="pd-${i}" onclick="goTo(${i})">${i===0?'<i class="ti ti-wand" style="font-size:10px"></i>':i}</div><div class="prog-lbl" id="pl-${i}">${s}</div>`;
+    wrap.appendChild(item);
+    if(i<CAMP_STEPS.length-1){const l=document.createElement('div');l.className='prog-line';l.id=`pl2-${i}`;wrap.appendChild(l);}
+  });
+}
+function updateProgress(){
+  if(campStep>0) document.getElementById('progressWrap').style.display='block';
+  CAMP_STEPS.forEach((_,i)=>{
+    const dot=document.getElementById(`pd-${i}`),lbl=document.getElementById(`pl-${i}`);
+    dot.className='prog-dot';lbl.className='prog-lbl';
+    if(i<campStep){dot.classList.add('done');dot.innerHTML='<i class="ti ti-check" style="font-size:10px"></i>';lbl.classList.add('done');}
+    else if(i===campStep){dot.classList.add('active');dot.innerHTML=i===0?'<i class="ti ti-wand" style="font-size:10px"></i>':i;lbl.classList.add('active');}
+    else dot.innerHTML=i===0?'<i class="ti ti-wand" style="font-size:10px"></i>':i;
+    if(i<CAMP_STEPS.length-1) document.getElementById(`pl2-${i}`).className=i<campStep?'prog-line done':'prog-line';
+  });
+  const pct=campStep===0?0:Math.round((campStep/(CAMP_STEPS.length-1))*100);
+  document.getElementById('pbarFill').style.width=pct+'%';
+  document.getElementById('stepCounter').textContent=campStep===0?'Start':`Step ${campStep} of ${CAMP_STEPS.length-1}`;
+}
+function goTo(n){
+  document.getElementById(`screen-${campStep}`).classList.remove('active');
+  campStep=n;
+  document.getElementById(`screen-${campStep}`).classList.add('active');
+  if(n>0){ document.getElementById('progressWrap').style.display='block'; }
+  else document.getElementById('progressWrap').style.display='none';
+  // ensure camp flow visible
+  document.getElementById('campList').style.display='none';
+  document.getElementById('campFlow').style.display='block';
+  document.getElementById('topbarLeft').textContent=n===0?'New Campaign':'New Campaign';
+  document.getElementById('stepCounter').textContent=n===0?'Start':`Step ${n} of ${CAMP_STEPS.length-1}`;
+  ['new','camp','aud','rails','creatives','profile'].forEach(i=>{
+    const el=document.getElementById('sbi-'+i);
+    if(el) el.classList.toggle('active',i==='new');
+  });
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ════ KPI ════
+function selKpi(k){
+  ['conv','awareness','engagement'].forEach(x=>{
+    const el=document.getElementById('kpi-'+x);
+    if(el) el.classList.toggle('sel',x===k);
+  });
+  kpiSel=k;
+  const labels={conv:'Conversion',awareness:'Awareness',engagement:'Engagement'};
+  document.getElementById('submitKPI').textContent=labels[k]||k;
+}
+
+// ════ RAILS PICKER (campaign flow) ════
+function pickRails(id,name){
+  document.querySelectorAll('#railsPickerCards .aud-pick-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById(id).classList.add('sel');
+  document.getElementById('railsSelectedPreview').style.display='block';
+  document.getElementById('railsSelName').textContent=name;
+}
+function clearRailsSelection(){
+  document.querySelectorAll('#railsPickerCards .aud-pick-card').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('railsSelectedPreview').style.display='none';
+}
+
+// ════ RAILS MODULE ════
+function showRailsBuilder(){
+  document.getElementById('railsEntry').style.display='none';
+  document.getElementById('railsBuilder').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function hideRailsBuilder(){
+  document.getElementById('railsEntry').style.display='block';
+  document.getElementById('railsBuilder').style.display='none';
+}
+function showRailsDetail(type){
+  showRailsBuilder();
+}
+function saveRails(){
+  hideRailsBuilder();
+  alert('Rails config saved.\n\nNow available in campaign creatives step.');
+}
+function setRailsMode(ch,mode){
+  const allow=document.getElementById('r'+ch+'-allow');
+  const block=document.getElementById('r'+ch+'-block');
+  if(allow) allow.classList.toggle('sel',mode==='allow');
+  if(block) block.classList.toggle('sel',mode==='block');
+}
+function addRailTag(containerId,inputId,type){
+  const inp=document.getElementById(inputId);
+  if(!inp||!inp.value.trim())return;
+  const tags=document.getElementById(containerId);
+  const t=document.createElement('div');
+  t.className='pub-tag-item'+(type==='exc'?' excl':'');
+  t.innerHTML=inp.value.trim()+'<span class="pub-tag-x" onclick="removePub(this)"> ✕</span>';
+  tags.appendChild(t);
+  inp.value='';
+}
+function removePub(el){el.parentElement.remove();}
+
+// ════ AUDIENCE PICKER ════
+function pickAud(id,name,sub,tags,maids,match,channels){
+  document.querySelectorAll('.aud-pick-card').forEach(c=>c.classList.remove('sel'));
+  if(id) { const el=document.getElementById(id); if(el) el.classList.add('sel'); }
+  selAudId=id;
+  document.getElementById('selAudPreview').style.display='block';
+  document.getElementById('audPickerCards').style.display='none';
+  document.getElementById('sapName').textContent=name;
+  document.getElementById('sapMAIDs').textContent=maids;
+  document.getElementById('sapMatch').textContent=match;
+  document.getElementById('sapChannels').textContent=channels||'4';
+  const tagWrap=document.getElementById('sapTags');
+  tagWrap.innerHTML='';
+  tags.forEach(t=>{const s=document.createElement('span');s.className='tag blue';s.textContent=t;tagWrap.appendChild(s);});
+  document.getElementById('submitAudName').textContent=name+' · '+maids+' MAIDs';
+}
+function clearAudSelection(){
+  selAudId=null;
+  document.getElementById('selAudPreview').style.display='none';
+  document.getElementById('audPickerCards').style.display='block';
+  document.querySelectorAll('.aud-pick-card').forEach(c=>c.classList.remove('sel'));
+}
+
+// ════ CHANNEL TOGGLES ════
+function toggleCh(ch){
+  active[ch]=!active[ch];
+  document.getElementById('chtog-'+ch).className='ch-toggle'+(active[ch]?' on':'');
+  document.getElementById('b-'+ch).disabled=!active[ch];
+  document.getElementById('p-'+ch).disabled=!active[ch];
+}
+function toggleLock(ch){
+  locked[ch]=!locked[ch];
+  const btn=document.getElementById('lock-'+ch);
+  btn.className=locked[ch]?'lock-btn locked':'lock-btn';
+  btn.innerHTML=locked[ch]?'<i class="ti ti-lock"></i>':'<i class="ti ti-lock-open"></i>';
+}
+
+// ════ AUDIENCE MODULE ════
+function startAudBuilder(){
+  audFlow='fp';
+  document.getElementById('audEntry').style.display='none';
+  document.getElementById('audBuilder').classList.add('show');
+  document.getElementById('audScrollForm').style.display='block';
+  document.getElementById('audBuilderHeader').style.display='flex';
+  document.getElementById('audBuilderTitle').textContent='Build audience';
+  document.getElementById('audBuilderSub').textContent='Upload your data and refine with filters below';
+  document.getElementById('fp-source-body').style.display='block';
+  const platBody=document.getElementById('plat-source-body');
+  if(platBody) platBody.style.display='none';
+  const fpNote=document.getElementById('fp-geo-note');
+  if(fpNote) fpNote.style.display='block';
+  document.getElementById('fpResolvedCard').style.display='none';
+  document.getElementById('progressWrap').style.display='none';
+  setRpSaveEnabled(true);
+  setupScrollObserver();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showPathChooser(){
+  // no path chooser — go back to audience list
+  document.getElementById('audEntry').style.display='flex';
+  document.getElementById('audBuilder').classList.remove('show');
+  resetReach();
+}
+function startAudFlow(flow){
+  startAudBuilder();
+}
+function toggleSec(id){
+  const body=document.getElementById('fbody-'+id);
+  const tog=document.getElementById('ftog-'+id);
+  if(!body)return;
+  const collapsed=body.classList.contains('collapsed');
+  body.classList.toggle('collapsed',!collapsed);
+  if(tog) tog.parentElement.classList.toggle('collapsed',!collapsed);
+}
+function scrollToSec(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  const offset=el.getBoundingClientRect().top+window.scrollY-110;
+  window.scrollTo({top:offset,behavior:'smooth'});
+}
+function setupScrollObserver(){
+  const sections=['source','geo','demo','device','interests','name'];
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id=e.target.id.replace('sec-','');
+        sections.forEach(s=>document.getElementById('anav-'+s)?.classList.remove('active'));
+        document.getElementById('anav-'+id)?.classList.add('active');
+      }
+    });
+  },{rootMargin:'-100px 0px -60% 0px'});
+  sections.forEach(s=>{const el=document.getElementById('sec-'+s);if(el)observer.observe(el);});
+}
+function addQuickGeo(btn,city){
+  const tags=document.getElementById('geoTagsScroll');
+  const d=document.createElement('div');d.className='geo-tag';
+  d.innerHTML=city+' <span class="geo-tag-x" onclick="this.parentElement.remove()">✕</span>';
+  tags.appendChild(d);
+  btn.remove();
+  document.getElementById('geo-summary').textContent='Mumbai + Delhi + '+city;
+  if(audFlow==='plat') showPlatformReach();
+}
+function selGender(g){
+  audGender=g;
+  ['all','female','male'].forEach(x=>document.getElementById('gc-'+x).classList.toggle('sel',x===g));
+  showDemoReach();
+}
+function updateDemoReach(){ showDemoReach(); }
+function selectAudLabel(el){
+  el.closest('.chip-row').querySelectorAll('.chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ════ REACH PANEL ════
+function resetReach(){
+  document.getElementById('rpNum').textContent='—';
+  document.getElementById('rpLbl').textContent='Add filters to see estimate';
+  document.getElementById('rpBadge').textContent='Awaiting filters';
+  document.getElementById('rpBadge').className='rp-badge neutral';
+  document.getElementById('rpGenderBreak').style.display='none';
+  document.getElementById('rpChBreak').style.display='none';
+  document.getElementById('rpFunnelRows').innerHTML='<div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Waiting for data source…</div><div class="funnel-val">—</div></div>';
+  setRpSaveEnabled(false);
+}
+function setRpSaveEnabled(on){
+  const btn=document.getElementById('rpSaveBtn');
+  btn.disabled=!on;btn.style.opacity=on?'1':'.5';btn.style.cursor=on?'pointer':'not-allowed';
+}
+function animRp(val){
+  const el=document.getElementById('rpNum');
+  el.style.opacity='0';el.style.transform='translateY(4px)';
+  setTimeout(()=>{el.textContent=val;el.style.opacity='1';el.style.transform='none';el.style.transition='all .25s ease';},100);
+}
+function showPlatformReach(){
+  animRp('5.04L');
+  document.getElementById('rpLbl').textContent='devices in selected geography';
+  document.getElementById('rpBadge').innerHTML='<i class="ti ti-map-pin" style="font-size:10px"></i> Mumbai + Delhi';
+  document.getElementById('rpBadge').className='rp-badge neutral';
+  document.getElementById('rpFunnelRows').innerHTML=`<div class="funnel-row current"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Geography base</div><div class="funnel-val">5.04L</div></div><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Demographics</div><div class="funnel-val">—</div></div>`;
+}
+function showDemoReach(){
+  const num=audGender==='female'?'1.26L':audGender==='male'?'2.95L':'4.21L';
+  animRp(num);
+  document.getElementById('rpLbl').textContent='devices after demographic filters';
+  document.getElementById('rpBadge').innerHTML='<i class="ti ti-arrow-down" style="font-size:10px"></i> narrowed from base';
+  document.getElementById('rpBadge').className='rp-badge down';
+  document.getElementById('rpGenderBreak').style.display='block';
+  document.getElementById('rpChBreak').style.display='block';
+  if(audGender==='female'){document.getElementById('rpBFemale').style.width='100%';document.getElementById('rpVFemale').textContent='100%';document.getElementById('rpBMale').style.width='0%';document.getElementById('rpVMale').textContent='—';}
+  else if(audGender==='male'){document.getElementById('rpBFemale').style.width='0%';document.getElementById('rpVFemale').textContent='—';document.getElementById('rpBMale').style.width='100%';document.getElementById('rpVMale').textContent='100%';}
+  else{document.getElementById('rpBFemale').style.width='30%';document.getElementById('rpVFemale').textContent='30%';document.getElementById('rpBMale').style.width='70%';document.getElementById('rpVMale').textContent='70%';}
+  document.getElementById('rpChMob').textContent=num;
+  document.getElementById('rpChWeb').textContent=audGender==='female'?'1.04L':audGender==='male'?'2.42L':'3.45L';
+  document.getElementById('rpChCtv').textContent=audGender==='female'?'22K':audGender==='male'?'72K':'92K';
+  document.getElementById('rpChDooh').textContent=audGender==='female'?'12K':audGender==='male'?'46K':'58K';
+  document.getElementById('rpFunnelRows').innerHTML=`<div class="funnel-row"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Base pool</div><div class="funnel-val">4.21L</div></div><div class="funnel-row current"><div class="funnel-dot" style="background:#3b82f6"></div><div class="funnel-name">Gender + age + income</div><div class="funnel-val">${num}</div></div><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Device + interests</div><div class="funnel-val">—</div></div>`;
+}
+function showNarrowedReach(){
+  const base=audGender==='female'?126000:audGender==='male'?295000:421800;
+  const narrowed=Math.round(base*0.71);
+  const display=narrowed>=100000?(narrowed/100000).toFixed(1)+'L':Math.round(narrowed/1000)+'K';
+  animRp(display);
+  document.getElementById('rpLbl').textContent='after all filters applied';
+  document.getElementById('rpBadge').innerHTML='<i class="ti ti-arrow-down" style="font-size:10px"></i> '+Math.round((1-narrowed/421800)*100)+'% narrowed from base';
+  document.getElementById('rpBadge').className='rp-badge down';
+  document.getElementById('rpFunnelRows').innerHTML=`<div class="funnel-row"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Base pool</div><div class="funnel-val">4.21L</div></div><div class="funnel-row"><div class="funnel-dot" style="background:#3b82f6"></div><div class="funnel-name">Demographics</div><div class="funnel-val">${audGender==='female'?'1.26L':audGender==='male'?'2.95L':'4.21L'}</div></div><div class="funnel-row current"><div class="funnel-dot" style="background:#22c55e"></div><div class="funnel-name">Device + interests + excl.</div><div class="funnel-val">${display}</div></div>`;
+  setRpSaveEnabled(true);
+  document.getElementById('rpNameInp').value=document.getElementById('audFinalName')?.value||'New Audience';
+}
+
+// ════ UPLOAD (aud module) ════
+function fakeAudUp(type,label){
+  document.getElementById(type+'-zone').style.display='none';
+  const done=document.getElementById(type+'-done');
+  done.querySelector('span').textContent=label;done.style.display='flex';
+  if(audFlow==='fp'){animRp('4.21L');document.getElementById('rpLbl').textContent='MAIDs matched in inventory';document.getElementById('rpBadge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> 91% match rate';document.getElementById('rpBadge').className='rp-badge neutral';document.getElementById('rpFunnelRows').innerHTML='<div class="funnel-row current"><div class="funnel-dot" style="background:#0050c8"></div><div class="funnel-name">Upload resolved</div><div class="funnel-val">4.21L</div></div><div class="funnel-row" style="opacity:.4"><div class="funnel-dot" style="background:#e0e0e0"></div><div class="funnel-name">Demographics</div><div class="funnel-val">—</div></div>';}
+}
+function resetAudUp(type){document.getElementById(type+'-zone').style.display='block';document.getElementById(type+'-done').style.display='none';}
+
+// ════ SAVE ════
+function saveAndReturn(){
+  const name=document.getElementById('audFinalName')?.value||document.getElementById('rpNameInp')?.value||'New Audience';
+  // Show success then return to audience list
+  document.getElementById('audBuilder').classList.remove('show');
+  document.getElementById('audEntry').style.display='flex';
+  alert('Audience "'+name+'" saved.\n\nNow available in campaign audience picker.');
+}
+
+// ════ SPARK ════
+function spark(id,text){
+  const el=document.getElementById('sug-'+id);
+  const html=`<div class="ai-sug-label"><i class="ti ti-sparkles"></i> AI suggestion</div><div class="ai-sug-text">${text}</div><div class="ai-sug-actions"><button class="ai-sug-btn ai-sug-accept" onclick="this.closest('.ai-suggestion').classList.remove('visible')">Accept</button><button class="ai-sug-btn ai-sug-dismiss" onclick="this.closest('.ai-suggestion').classList.remove('visible');document.getElementById('floater').style.display='none'">Dismiss</button></div>`;
+  if(el){el.innerHTML=html;el.classList.add('visible');}
+  else{const f=document.getElementById('floater');f.innerHTML=html;f.style.display='block';f.classList.add('visible');}
+}
+
+buildProgress();updateProgress();
+// Start on campaign list
+sidebarNav('camp');
+</script>
+</body>
+</html>
